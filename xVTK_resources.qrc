@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/colormap.png</file>
+        <file>images/seamless-circuit-board.png</file>
+        <file>images/vtk-logo.png</file>
+        <file>images/opacity_pattern.png</file>
+        <file>images/lock_closed.png</file>
+        <file>images/lock_open.png</file>
+        <file>images/traffic_light_empty.png</file>
+        <file>images/traffic_light_green.png</file>
+        <file>images/traffic_light_red.png</file>
+        <file>images/traffic_light_yellow.png</file>
+    </qresource>
+</RCC>
