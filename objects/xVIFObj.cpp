@@ -1,12 +1,13 @@
 #include "xVIFObj.h"
+#include "xvEvalCondition.h"
 
 xVIFObj::xVIFObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_IF;
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
-    _paramMp["reg expression"]._value = ">0";
-    _paramMp["reg expression"]._id = 1;
+    _paramMp["condition"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["condition"]._id = 1;
     generateShape();
     xConnector* pOutputCon=new xConnector(this);
     _connectorLst.append(pOutputCon);

@@ -9,18 +9,6 @@ namespace Ui {
 class xVUserTableDefinitionDlg;
 }
 
-struct DEF_NODE
-{
-public:
-    xAbstractBasisObj* pRefObj = nullptr;       // nullptr if global namespace
-    xParamMap* pParamMap = nullptr;
-    DEF_NODE(){}
-    DEF_NODE(xAbstractBasisObj* pO,xParamMap* pP){
-        pRefObj=pO;
-        pParamMap=pP;
-    }
-};
-
 class xVUserTableDefinitionDlg : public QDialog
 {
     Q_OBJECT
@@ -30,6 +18,18 @@ public:
     {
         xUTDDM_DEFINITION,
         xUTDDM_CONTROL
+    };
+
+    struct DEF_NODE
+    {
+    public:
+        xAbstractBasisObj* pRefObj = nullptr;       // nullptr if global namespace
+        xParamMap* pParamMap = nullptr;
+        DEF_NODE(){}
+        DEF_NODE(xAbstractBasisObj* pO,xParamMap* pP){
+            pRefObj=pO;
+            pParamMap=pP;
+        }
     };
 
     explicit xVUserTableDefinitionDlg(QWidget *parent = nullptr);

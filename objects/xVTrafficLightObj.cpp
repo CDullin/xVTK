@@ -1,5 +1,5 @@
 #include "xVTrafficLightObj.h"
-
+#include "xvEvalCondition.h"
 xVTrafficLightObj::xVTrafficLightObj(QString txt):xVObj_Basics()
 {
     _type = xVOT_TRAFFIC_LIGHT;
@@ -7,6 +7,12 @@ xVTrafficLightObj::xVTrafficLightObj(QString txt):xVObj_Basics()
     _paramMp["name"]._id = 0;
     _paramMp["traffic light status"]._id=2;
     _paramMp["traffic light status"]._value=QVariant::fromValue<xLimitedInt>(xLimitedInt(0,0,3));
+    _paramMp["condition green"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["condition green"]._id = 3;
+    _paramMp["condition yellow"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["condition yellow"]._id = 4;
+    _paramMp["condition red"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["condition red"]._id = 5;
     generateShape();
 
     xConnector* pInputCon=new xConnector(this);

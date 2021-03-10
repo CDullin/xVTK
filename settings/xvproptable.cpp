@@ -1,7 +1,9 @@
 #include "xvproptable.h"
+#include "xvEvalCondition.h"
 #include "xVCustomTableItems.h"
 #include "xVVolumeVisPropObj.h"
 #include "xVUserTableDefinitionDlgItem.h"
+#include "xVEquationDlgItem.h"
 #include <QComboBox>
 
 xVPropTable::xVPropTable(QWidget* parent):QTableWidget(parent)
@@ -146,6 +148,14 @@ void xVPropTable::customItemChanged()
                     if (pItem)
                     {
                         ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(pItem->paramMap());
+                    }
+                }
+                if (var.userType()==QMetaType::type(("xVEvalCondition")))
+                {
+                    xVEquationDlgItem *pItem = dynamic_cast<xVEquationDlgItem*>(wdgt);
+                    if (pItem)
+                    {
+                        ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(xVEvalCondition(pItem->equation()));
                     }
                 }
             }
@@ -371,6 +381,15 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
                 xVUserTableDefinitionDlgItem* pItem = new xVUserTableDefinitionDlgItem();
                 if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setMap(prop._value.value<xParamMap>(),dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
                 if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setMap(::_globalNameSpace,dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
+                setCellWidget(r,1,pItem);
+                connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
+                connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+            }
+            if ((int)prop._value.userType()==QMetaType::type("xVEvalCondition"))
+            {
+                xVEquationDlgItem* pItem = new xVEquationDlgItem(dynamic_cast<xVObj_Basics*>(pCurrentObj));
+                //if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setMap(prop._value.value<xParamMap>(),dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
+                //if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setMap(::_globalNameSpace,dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));

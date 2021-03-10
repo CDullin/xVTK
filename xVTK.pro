@@ -50,6 +50,7 @@ SOURCES += \
     settings/xVBoolDlgItem.cpp \
     settings/xVColorDlgItem.cpp \
     settings/xVDoubleValueDlgItem.cpp \
+    settings/xVEquationDlgItem.cpp \
     settings/xVFileImportDlgItem.cpp \
     settings/xVIntValueDlgItem.cpp \
     settings/xVLUTFuncDlgItem.cpp \
@@ -58,6 +59,7 @@ SOURCES += \
     settings/xVUserTableDefinitionDlgItem.cpp \
     settings/xVVector3DDlgItem.cpp \
     settings/xrcolorpickdlg.cpp \
+    settings/xvequationdesigndlg.cpp \
     settings/xvproptable.cpp \
     settings/xvpropwdgt.cpp \
     settings/xvsettingswdgt.cpp \
@@ -113,6 +115,7 @@ HEADERS += \
     settings/xVColorDlgItem.h \
     settings/xVCustomTableItems.h \
     settings/xVDoubleValueDlgItem.h \
+    settings/xVEquationDlgItem.h \
     settings/xVFileImportDlgItem.h \
     settings/xVIntValueDlgItem.h \
     settings/xVLUTFuncDlgItem.h \
@@ -121,6 +124,7 @@ HEADERS += \
     settings/xVUserTableDefinitionDlgItem.h \
     settings/xVVector3DDlgItem.h \
     settings/xrcolorpickdlg.h \
+    settings/xvequationdesigndlg.h \
     settings/xvproptable.h \
     settings/xvpropwdgt.h \
     settings/xvsettingswdgt.h \
@@ -137,6 +141,7 @@ FORMS += \
     dialogs/xvsavedlg.ui \
     objects/xvusertableruntimedlg.ui \
     settings/xrcolorpickdlg.ui \
+    settings/xvequationdesigndlg.ui \
     settings/xvpropwdgt.ui \
     settings/xvsettingswdgt.ui \
     settings/xvusertabledefinitiondlg.ui \

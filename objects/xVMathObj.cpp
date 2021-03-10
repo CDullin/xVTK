@@ -1,13 +1,13 @@
 #include "xVMathObj.h"
+#include "xvEvalCondition.h"
 
 xVMathObj::xVMathObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_MATH;
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
-
-    _paramMp["reg expression"]._value = ">0";
-    _paramMp["reg expression"]._id = 1;
+    _paramMp["equation"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["equation"]._id = 3;
 
     generateShape();
     xConnector* pInputCon = new xConnector(this);
