@@ -6,12 +6,20 @@ xVGenVisObj::xVGenVisObj(const QString& txt):xVObj_Basics()
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     generateShape();
+
     xConnector*pInputCon = new xConnector(this);
     _connectorLst.append(pInputCon);
     pInputCon->setToInput();
     pInputCon->item()->moveBy(0,12.5);
     pGrpItem->addToGroup(pInputCon->item());
     connect(pInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
+
+    xConnector*pOutputCon = new xConnector(this);
+    _connectorLst.append(pOutputCon);
+    pOutputCon->setToOutput();
+    pOutputCon->item()->moveBy(105,12.5);
+    pGrpItem->addToGroup(pOutputCon->item());
+    connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 
     xConnector* pParamInputCon=new xConnector(this);
     _connectorLst.append(pParamInputCon);
@@ -29,6 +37,11 @@ xVGenVisObj::xVGenVisObj(QDataStream &d):xVObj_Basics(d)
         pGrpItem->addToGroup(_connectorLst[i]->item());
         connect(_connectorLst[i],SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     }
+}
+
+void xVGenVisObj::run()
+{
+    xVObj_Basics::run();
 }
 
 void xVGenVisObj::generateShape()

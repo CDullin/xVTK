@@ -27,6 +27,8 @@ void xVTKDlg::save()
             d.mkpath(dlg.path());
             QDir::setCurrent(dlg.path());
 
+
+
             QFile f(dlg.path()+"/dashboard.dat");
             if (f.open(QFile::WriteOnly))
             {
@@ -40,7 +42,7 @@ void xVTKDlg::save()
                 ds << (quint16)_objLst.count();
                 QList<xVObj_Basics*> baseObjLst;
                 QList<xConnectorObj*> conLst;
-                for (QList<xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+                for (QList<xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
                 {
                     xVObj_Basics *pVObj=dynamic_cast<xVObj_Basics*>(*it);
                     xConnectorObj *pConObj=dynamic_cast<xConnectorObj*>(*it);
@@ -53,7 +55,7 @@ void xVTKDlg::save()
                 ds << (quint16) baseObjLst.count();
                 for (QList<xVObj_Basics*>::iterator it=baseObjLst.begin();it!=baseObjLst.end();++it)
                 {
-                    ds << (quint16)(*it)->type();
+                    ds << (quint32)(*it)->type();
                     // id, parameter, (referenced data), position in the scene
                     (*it)->save(ds,_explicit);
                     // save position in scene
@@ -86,9 +88,9 @@ void xVTKDlg::save()
     }
 }
 
-xAbstractBasisObj* xVTKDlg::getObjById(const QString& id)
+xVAbstractBaseObj* xVTKDlg::getObjById(const QString& id)
 {
-    xAbstractBasisObj* pResObj=nullptr;
+    xVAbstractBaseObj* pResObj=nullptr;
     for (int i=0;i<_objLst.count();++i)
         if (_objLst[i]->id()==id)
             pResObj=_objLst[i];
@@ -117,7 +119,17 @@ void xVTKDlg::load()
         if (QMessageBox::question(0,"Warning","Laoding will remove all current data. Do you like to continue")==QMessageBox::No)
             return;
     }
-    clear();
+    reset(false);
+    if (_objLst.count()>0)
+    {
+        xVAbstractBaseObj* pItem=_objLst.first();
+        while (pItem && _objLst.count()>0)
+        {
+            _objLst.removeOne(pItem);
+            removeObject(pItem);
+            _objLst.count()>0 ? pItem = _objLst.first() : pItem=nullptr;
+        }
+    }
 
     xVLoadDlg dlg;
     if (dlg.exec()==QDialog::Accepted)
@@ -136,17 +148,29 @@ void xVTKDlg::load()
             quint16 _baseObjCount; d >> _baseObjCount;
             // load base objects
             for (int i=0;i<_baseObjCount && !_abort;++i) {
-                quint16 _type;d >> _type;
+                quint64 _pos = d.device()->pos();
+                quint32 _type;d >> _type;
                 xVObj_Basics* pObj=nullptr;
                 switch ((xVO_TYPE)_type)
                 {
-                case xVOT_VOLUME:           pObj=new xVVolObj(d);               break;
-                case xVOT_MESH:             pObj=new xVPolyObj(d);              break;
+                case xVOT_CVS:              pObj = new xVImportCVSObj(d);                                    break;
+                case xVOT_ARDUINO_COM:      pObj = new xVArduinoComObj(d);                                    break;
+                case xVOT_ARDUINO_CONNECT:  pObj = new xVArduinoConnectObj(d);                                    break;
+                case xVOT_WAIT:             pObj = new xVWaitObj(d);                                                 break;
+                case xVOT_IF:               pObj = new xVIFObj(d);                                                 break;
+                case xVOT_END:              pObj = new xVEndObj(d);                                                 break;
+                case xVOT_START:            pObj = new xVStartObj(d);                                               break;
+                case xVOT_VOLUME:           pObj = new xVVolObj(d);               break;
+                case xVOT_MESH:             pObj = new xVPolyObj(d);              break;
                 case xVOT_IMAGE:            break;
                 case xVOT_IMAGE_STACK:      break;
                 case xVOT_PLANE:            break;
-                case xVOT_2D_VIEW:          pObj=new xV2DVisObj(d); connect(pObj,SIGNAL(addVisWdgt(QWidget*)),this,SLOT(addVisWidget(QWidget*)));   break;
-                case xVOT_3D_VIEW:          pObj=new xV3DVisObj(d); connect(pObj,SIGNAL(addVisWdgt(QWidget*)),this,SLOT(addVisWidget(QWidget*)));   break;
+                case xVOT_2D_VIEW:          pObj=new xV2DVisObj(d);
+                    //connect(pObj,SIGNAL(addVisWdgt(QWidget*)),this,SLOT(addVisWidget(QWidget*)));
+                    break;
+                case xVOT_3D_VIEW:          pObj=new xV3DVisObj(d);
+                    //connect(pObj,SIGNAL(addVisWdgt(QWidget*)),this,SLOT(addVisWidget(QWidget*)));
+                    break;
                 case xVOT_VOLUME_VIS_PROP:  pObj=new xVVolumeVisPropObj(d);     break;
                 case xVOT_MESH_VIS_PROP:    pObj=new xVMeshVisPropObj(d);       break;
                 case xVOT_USER_TABLE_DLG:   pObj=new xVUserTableImportDlgObj(d);break;
@@ -171,13 +195,14 @@ void xVTKDlg::load()
             }
 
             // convert all ids of the connectors to real references
-            for (QList <xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+            for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
             {
                 xVObj_Basics* pVObj=dynamic_cast<xVObj_Basics*>(*it);
                 if (pVObj)
+                {
                     for (QList<xConnector*>::iterator it2=pVObj->connectorLst()->begin();it2!=pVObj->connectorLst()->end();++it2)
                     {
-                        if ((*it2)->objIDs()->count()>0)
+                        while ((*it2)->objIDs()->count()>0)
                         {
                             QString vObjId = (*it2)->objIDs()->takeFirst();
                             xVObj_Basics* pCurrentVObj = dynamic_cast<xVObj_Basics*>(getObjById(vObjId));
@@ -185,6 +210,9 @@ void xVTKDlg::load()
                                 (*it2)->addConObject(pCurrentVObj);
                         }
                     }
+                    // map all parameter ids
+                    pVObj->translateObjIDsToPtr();
+                }
             }
 
             quint16 _conLstCount; d >> _conLstCount;
@@ -201,12 +229,19 @@ void xVTKDlg::load()
                 emit KSignal(ST_ADD_OBJECT,pConObj);    
             }
 
+            emit KSignal(ST_GLOBAL_NAMESPACE_MODIFIED);
 
             f.close();
         }
         else
+        {
+            clear(false);
             emit KSignal(ST_WARN_MSG,new QString("couldn't open dashboard file"));
+        }
     }
     else
+    {
+        clear(false);
         emit KSignal(ST_WARN_MSG,new QString("export aborted by user"));
+    }
 }

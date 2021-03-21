@@ -42,6 +42,8 @@ public:
         case xCT_INPUT: p=QPointF(-15,0);break;
         case xCT_OUTPUT: p=QPointF(15,0);break;
         case xCT_PARAMETER: p=QPointF(0,0);break;
+        default:
+            break;
         }
         return pEllipseItem->mapToScene(p);}
     void save(QDataStream& d);

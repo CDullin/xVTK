@@ -19,6 +19,7 @@ xVStartObj::xVStartObj(const QString& txt):xVObj_Basics()
 
 xVStartObj::xVStartObj(QDataStream& d):xVObj_Basics(d)
 {
+    quint64 _pos = d.device()->pos();
     _type = xVOT_START;
     generateShape();
     for (int i=0;i<_connectorLst.count();++i)
@@ -31,10 +32,9 @@ xVStartObj::xVStartObj(QDataStream& d):xVObj_Basics(d)
 
 void xVStartObj::run()
 {
+    xVObj_Basics::run();
     setStatus(OS_RUNNING);
-
     // calculate equation(s)
-
     setStatus(OS_VALID);
 }
 
@@ -78,8 +78,8 @@ void xVStartObj::generateShape()
     pGrpItem->addToGroup(pTxtItem);
     pGrpItem->setBoundingRectSize(QRectF(-25,-15,140,45));
 
-    pStatusItem->moveBy(5,0);
-    pStatusItem->hide();
+    pStatusItem->moveBy(-15,0);
+    //pStatusItem->hide();
     pGrpItem->addToGroup(pStatusItem);
 
     pGrpItem->setFlags(QGraphicsItem::ItemIsMovable);

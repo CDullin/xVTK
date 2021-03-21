@@ -6,8 +6,9 @@ xVMathObj::xVMathObj(const QString& txt):xVObj_Basics()
     _type = xVOT_MATH;
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
-    _paramMp["equation"]._value = QVariant::fromValue(xVEvalCondition("0"));
+    _paramMp["equation"]._value = QVariant::fromValue(xVEvalCondition(""));
     _paramMp["equation"]._id = 3;
+    _maxInput=1000;
 
     generateShape();
     xConnector* pInputCon = new xConnector(this);
@@ -33,6 +34,7 @@ xVMathObj::xVMathObj(const QString& txt):xVObj_Basics()
 
 xVMathObj::xVMathObj(QDataStream& d):xVObj_Basics(d)
 {
+    _maxInput=1000;
     _type = xVOT_MATH;
     generateShape();
     for (int i=0;i<_connectorLst.count();++i)
@@ -40,15 +42,14 @@ xVMathObj::xVMathObj(QDataStream& d):xVObj_Basics(d)
         pGrpItem->addToGroup(_connectorLst[i]->item());
         connect(_connectorLst[i],SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     }
-
 }
 
 void xVMathObj::run()
 {
+    xVObj_Basics::run();
     setStatus(OS_RUNNING);
-
-    // calculate equation(s)
-
+    _paramMp["equation"]._value.value<xVEvalCondition>().evaluate();
+    emit KSignal(ST_GLOBAL_NAMESPACE_MODIFIED,0);
     setStatus(OS_VALID);
 }
 
@@ -60,12 +61,6 @@ void xVMathObj::save(QDataStream& d,bool _explicit)
 void xVMathObj::reset()
 {
 
-}
-
-void xVMathObj::paramModified(const QString& txt)
-{
-    xVObj_Basics::paramModified(txt);
-    // potentionally nothing to do
 }
 
 void xVMathObj::generateShape()
@@ -104,6 +99,7 @@ void xVMathObj::generateShape()
     pGrpItem->setBoundingRectSize(QRectF(-25,-15,140,45));
 
     pStatusItem->moveBy(5,0);
+    pStatusItem->hide();
     pGrpItem->addToGroup(pStatusItem);
 
     pGrpItem->setFlags(QGraphicsItem::ItemIsMovable);

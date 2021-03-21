@@ -37,7 +37,7 @@ public:
         TM_NRE
     };
 
-    explicit xVEvalCondition(const QString& str="",QObject *parent = nullptr);
+    xVEvalCondition(const QString& str="",QObject *parent = nullptr);
     xVEvalCondition(QDataStream &d);
     xVEvalCondition(const xVEvalCondition& other) {_condition=other._condition;_mode=other._mode;_result=other._result;}
 
@@ -46,6 +46,8 @@ public:
     QVariant result(){update();return _result;}
     void setString(const QString& s){_condition=s;}
     void setTrigMode(const TRIG_MODE& m){_mode=m;}
+    QString equation(){return _condition;}
+    void evaluate(){update();}
 
     static bool isTrue(const QString&);
     static QVariant resultOf(const QString&);
@@ -77,12 +79,16 @@ public:
     QVariant _radianOf(QVariant v);
     QVariant _angleOfRadian(QVariant v);
 
+    void updateFromIDtoPtr(){_condition=translateFrmID(_condition);}
+
 signals:
     void KSignal(const SIG_TYPE&,void* data=nullptr);
 
 protected:    
     QVariant calc_rec(QString txt);
     void update();
+    QString translateToID(QString) const;
+    QString translateFrmID(QString) const;
     
     QString _condition;
     QVariant _result;

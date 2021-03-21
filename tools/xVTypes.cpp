@@ -34,31 +34,25 @@
 #include <QQuaternion>
 #include <QPolygonF>
 #include <QIcon>
+#include "xvEvalCondition.h"
+#include "xVAbstractBaseObj.h"
 
 QMap<QString,xPROP_TYPE> _settings;
 QMap<QString,xPROP_TYPE> _globalNameSpace;
 QMap<QString,QStringList> _optionLsts;
 long long _objIDCount=0;
+QList <xVAbstractBaseObj*> _objLst;
 
-xAbstractBasisObj::xAbstractBasisObj():QObject(){
-    _selected=false;
-    _id=QDateTime::currentDateTime().toString("yyMMddhhmmsszzz")+QString("_%1").arg(::_objIDCount++);}
 
-xAbstractBasisObj::xAbstractBasisObj(QDataStream& d):QObject()
+void xPROP_TYPE::save(QDataStream &d)
 {
-    d >> _selected;
-    d >> _type;
-    quint16 _count; d >> _count;
-    for (int i=0;i<_count;++i)
-    {
-        QString k;d >> k;
-        xPROP_TYPE prop(d);
-        _paramMp[k]=prop;
-    }
-    d >> _id;
+    d << _id;
+    d << _value;
+    d << _subGrp;
+    QString ID="";
+    if (pRefObj) ID=pRefObj->id();
+    d << ID;
 }
-
-void xAbstractBasisObj::setParamSelected(bool b){_selected=b;}
 
 xVProgressObserver::xVProgressObserver(QObject *pParent):QObject(pParent),vtkProgressObserver()
 {}
@@ -145,7 +139,11 @@ QDataStream &operator>>(QDataStream &in, xLimitedDouble &myObj){
 QDataStream &operator<<(QDataStream &out, const xParamMap &myObj){
     out << (quint32)myObj.count();
     for (xParamMap::const_iterator it=myObj.begin();it!=myObj.end();++it)
+    {
         out << it.key() << it.value()._id << it.value()._value << it.value()._subGrp;
+        if (it.value().pRefObj!=nullptr) out << it.value().pRefObj->id();
+        else out << "0";
+    }
     return out;
 }
 QDataStream &operator>>(QDataStream &in, xParamMap &myObj)
@@ -156,14 +154,29 @@ QDataStream &operator>>(QDataStream &in, xParamMap &myObj)
     {
         QString key;
         xPROP_TYPE prop;
-        in >> key >> prop._id >> prop._value >> prop._subGrp;
-        myObj[key]=prop;
+        in >> key >> myObj[key]._id >> myObj[key]._value >> myObj[key]._subGrp >> myObj[key]._subGrpIDStr;
     }
     return in;
 }
-
-
+/*
 void saveToStream(QDataStream &d,const QVariant& v)
 {
     d << v;
+}
+*/
+QString objName2objId(const QString& name)
+{
+    QString id="";
+    for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+        if ((*it)->paramMap() && (*it)->paramMap()->contains("name") && (*(*it)->paramMap())["name"]._value.toString()==name)
+            id=(*it)->id();
+    return id;
+}
+
+xVAbstractBaseObj* objId2objPtr(const QString& id)
+{
+    xVAbstractBaseObj* pObjPtr=nullptr;
+    for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+        if ((*it)->id()==id) pObjPtr=(*it);
+    return pObjPtr;
 }

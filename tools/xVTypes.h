@@ -17,9 +17,11 @@
 
 #include <QDataStream>
 
-void saveToStream(QDataStream &d,const QVariant& v);
+class xVAbstractBaseObj;
 
-class xAbstractBasisObj;
+//void saveToStream(QDataStream &d,const QVariant& v);
+QString objName2objId(const QString& name);
+xVAbstractBaseObj* objId2objPtr(const QString& id);
 
 enum VARIANT_TYPES
 {
@@ -73,12 +75,14 @@ enum SIG_TYPE
 enum xVO_TYPE
 {
     xVOT_INVALID            = 0xFFFFFFFF,
+    xVOT_END                = 0xEEEEEEEE,
     xVOT_START              = 0x00000000,
     xVOT_DATA               = 0x00000100,                   // this flag indicates that this is a data import type
     xVOT_VOLUME             = 0x00000101,
     xVOT_MESH               = 0x00000102,
     xVOT_IMAGE              = 0x00000103,
     xVOT_IMAGE_STACK        = 0x00000104,
+    xVOT_CVS                = 0x00000105,
     xVOT_PLANE              = 0x00000200,
     xVOT_VIEW               = 0x00000400,
     xVOT_2D_VIEW            = 0x00000401,
@@ -101,7 +105,10 @@ enum xVO_TYPE
     xVOT_IF                 = 0x00020002,
     xVOT_TRAFFIC_LIGHT      = 0x00020003,
     xVOT_MATH               = 0x00020004,
-    xVOT_VAR_DEFINITION     = 0x00020104
+    xVOT_WAIT               = 0x00010005,
+    xVOT_VAR_DEFINITION     = 0x00010104,
+    xVOT_ARDUINO_CONNECT    = 0x00040000,
+    xVOT_ARDUINO_COM        = 0x00040001
 };
 
 struct HOOK
@@ -139,15 +146,10 @@ public:
     quint32 _id=0;
     QVariant _value;
     QString  _subGrp="";
-    xAbstractBasisObj *pRefObj=nullptr;
+    QString  _subGrpIDStr="";
+    xVAbstractBaseObj *pRefObj=nullptr;
 
-    void save(QDataStream &d)
-    {
-        d << _id;
-        d << _value;
-        //saveToStream(d,_value);
-        d << _subGrp;
-    }
+    void save(QDataStream &d);
     xPROP_TYPE(){};
     xPROP_TYPE(const xPROP_TYPE& other){
         _id=other._id;
@@ -160,6 +162,7 @@ public:
         d >> _id;
         d >> _value;
         d >> _subGrp;
+        d >> _subGrpIDStr;
     }
 };
 
@@ -170,6 +173,9 @@ public:
     xLimitedInt(const quint32& v, const quint32& l, const quint32& h){_value=v;_lowerLimit=l;_upperLimit=h;}
     xLimitedInt(const xLimitedInt& other){_value=other._value;_lowerLimit=other._lowerLimit;_upperLimit=other._upperLimit;}
     qint32 _value=0,_lowerLimit=0,_upperLimit=0;
+    void setValue(const qint32& v){_value=v;}
+    void setLowerLimit(const qint32& v){_lowerLimit=v;}
+    void setUpperLimit(const qint32& v){_upperLimit=v;}
 };
 
 struct xLimitedDouble
@@ -202,45 +208,6 @@ public:
     virtual void UpdateProgress(double amount) override;
 signals:
     void KSignal(const SIG_TYPE&,void* data=nullptr);
-};
-
-class xAbstractBasisObj:public QObject
-{
-    Q_OBJECT
-public:
-    xAbstractBasisObj();
-    xAbstractBasisObj(QDataStream& d);
-    virtual void setParamSelected(bool b);
-    bool isParamSelected(){return _selected;}
-    virtual QMap<QString,xPROP_TYPE>* paramMap(){return &_paramMp;}
-    long type(){return _type;}
-    QString id(){return _id;}
-    virtual void save(QDataStream& d,bool _explicit=false)
-    {
-        d << _selected << _type;
-        d << (quint16)_paramMp.count();
-        for (QMap<QString,xPROP_TYPE>::iterator it=_paramMp.begin();it!=_paramMp.end();++it)
-        {
-            d << it.key();
-            it->save(d);
-        }
-        d << _id;
-    }
-public slots:
-    virtual void paramModified(const QString& txt="")=0;
-signals:
-    void selected(xAbstractBasisObj*);
-    void KSignal(const SIG_TYPE&,void* data=nullptr);
-protected slots:
-    void grpSelected()
-    {
-        emit selected(this);
-    }
-protected:
-    bool _selected;
-    xVO_TYPE _type;
-    QMap<QString,xPROP_TYPE> _paramMp;
-    QString _id;
 };
 
 typedef vtkActor* vtkActorPtr;
@@ -289,5 +256,6 @@ extern QMap<QString,xPROP_TYPE> _settings;
 extern QMap<QString,xPROP_TYPE> _globalNameSpace;
 extern QMap<QString,QStringList> _optionLsts;
 extern long long _objIDCount;
+extern QList <xVAbstractBaseObj*> _objLst;
 
 #endif // XVTYPES_H

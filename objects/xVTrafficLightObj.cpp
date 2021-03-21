@@ -21,6 +21,12 @@ xVTrafficLightObj::xVTrafficLightObj(QString txt):xVObj_Basics()
     pInputCon->item()->moveBy(-9,12.5);
     pGrpItem->addToGroup(pInputCon->item());
     connect(pInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
+    xConnector* pOutputCon=new xConnector(this);
+    _connectorLst.append(pOutputCon);
+    pOutputCon->setToOutput();
+    pOutputCon->item()->moveBy(10,12.5);
+    pGrpItem->addToGroup(pOutputCon->item());
+    connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     xConnector* pParamInputCon=new xConnector(this);
     _connectorLst.append(pParamInputCon);
     pParamInputCon->setToParamInput();
@@ -40,8 +46,17 @@ xVTrafficLightObj::xVTrafficLightObj(QDataStream& d):xVObj_Basics(d)
 }
 void xVTrafficLightObj::run()
 {
+    xVObj_Basics::run();
+    //if (status()!=OS_UPDATE_NEEDED) return;
     setStatus(OS_RUNNING);
-    //*******************
+    _paramMp["traffic light status"]._value=QVariant::fromValue(xLimitedInt(0,0,3));
+    if (_paramMp["condition green"]._value.value<xVEvalCondition>().toBool())
+        _paramMp["traffic light status"]._value=QVariant::fromValue(xLimitedInt(1,0,3));
+    if (_paramMp["condition yellow"]._value.value<xVEvalCondition>().toBool())
+        _paramMp["traffic light status"]._value=QVariant::fromValue(xLimitedInt(2,0,3));
+    if (_paramMp["condition red"]._value.value<xVEvalCondition>().toBool())
+        _paramMp["traffic light status"]._value=QVariant::fromValue(xLimitedInt(3,0,3));
+    paramModified();
     setStatus(OS_VALID);
 }
 
@@ -59,6 +74,7 @@ void xVTrafficLightObj::paramModified(const QString &txt)
     case 3 : pTrafficLightPixItem->setPixmap(QPixmap("://images/traffic_light_red.png"));
         break;
     }
+    pTrafficLightPixItem->update();
 }
 
 void xVTrafficLightObj::save(QDataStream& d, bool _explicit)
@@ -91,7 +107,7 @@ void xVTrafficLightObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pTrafficLightPixItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(0,-15,150,45));
+    pGrpItem->setBoundingRectSize(QRectF(0,-15,50,45));
 
     pStatusItem->moveBy(15,0);
     pStatusItem->hide();

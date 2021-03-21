@@ -59,6 +59,9 @@ xVCallExternalObj::xVCallExternalObj(QDataStream& d):xVGenImpObj(d)
 
 void xVCallExternalObj::run()
 {
+    xVGenImpObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
+
     setStatus(OS_RUNNING);
 
     QFileInfo info = _paramMp["file name"]._value.value<QFileInfo>();

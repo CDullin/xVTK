@@ -8,6 +8,7 @@ xVVarDefinitionObj::xVVarDefinitionObj(QString txt):xVObj_Basics()
     _paramMp["parameter table"]._id=2;
     _paramMp["parameter table"]._value=QVariant::fromValue(xParamMap());
     generateShape();
+    _maxInput=1000;
 
     xConnector* pInputCon = new xConnector(this);
     _connectorLst.append(pInputCon);
@@ -32,17 +33,42 @@ xVVarDefinitionObj::xVVarDefinitionObj(QString txt):xVObj_Basics()
 
 xVVarDefinitionObj::xVVarDefinitionObj(QDataStream& d):xVObj_Basics(d)
 {
+    _type = xVOT_VAR_DEFINITION;
     generateShape();
+    _maxInput=1000;
     for (int i=0;i<_connectorLst.count();++i)
     {
         pGrpItem->addToGroup(_connectorLst[i]->item());
         connect(_connectorLst[i],SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     }
+    // update global namespace
+    /*
+    for (QMap<QString,xPROP_TYPE>::iterator it=_paramMp["parameter table"]._value.value<xParamMap>().begin();
+         it!=_paramMp["parameter table"]._value.value<xParamMap>().end();++it)
+    {
+        if (it->pRefObj==nullptr) // global namespace
+        {
+            _globalNameSpace[it.key()]=it.value();
+        }
+    }
+    */
 }
 void xVVarDefinitionObj::run()
 {
+    xVObj_Basics::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
     setStatus(OS_RUNNING);
-    //*******************
+    // update global namespace
+    xParamMap _cpy = _paramMp["parameter table"]._value.value<xParamMap>();
+    for (QMap<QString,xPROP_TYPE>::iterator it=_cpy.begin();
+         it!=_cpy.end();++it)
+    {
+        if (it->pRefObj==nullptr) // global namespace
+        {
+            _globalNameSpace[it.key()]=it.value();
+        }
+    }
+    emit KSignal(ST_GLOBAL_NAMESPACE_MODIFIED);
     setStatus(OS_VALID);
 }
 void xVVarDefinitionObj::save(QDataStream& d, bool _explicit)

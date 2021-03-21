@@ -13,7 +13,7 @@ void xVUserTableDefinitionDlgItem::clicked_SLOT()
     if (pRefObj)
     {
         xVUserTableDefinitionDlg dlg;
-        dlg.addInputParam("global namespace",&::_globalNameSpace,0);
+        dlg.addInputParam("global",&::_globalNameSpace,0);
         for (QList <xConnector*>::iterator it2=pRefObj->connectorLst()->begin();it2!=pRefObj->connectorLst()->end();++it2)
         {
             // find all connected and enabled parameter connections
@@ -23,30 +23,29 @@ void xVUserTableDefinitionDlgItem::clicked_SLOT()
         }
 
 
-        dlg.setOutputParam(&_paramMap,pRefObj);
+        dlg.setOutputParam((*pRefObj->paramMap())["parameter table"]._value.value<xParamMap>(),pRefObj);
         dlg.setToControlMode();
         dlg.exec();
+        (*pRefObj->paramMap())["parameter table"]._value=QVariant::fromValue<xParamMap>(dlg.resultingMap());
 
-        setText(QString("define parameter [%1]").arg(_paramMap.count()));
+        setText(QString("define parameter [%1]").arg((*pRefObj->paramMap())["parameter table"]._value.value<xParamMap>().count()));
         emit modified();
     }
 
     if (pVarDefObj)
     {
         xVUserTableDefinitionDlg dlg;
-        dlg.setOutputParam(&_paramMap,pVarDefObj);
+        dlg.setOutputParam((*pVarDefObj->paramMap())["parameter table"]._value.value<xParamMap>(),pVarDefObj);
         dlg.setToDefinitionMode();
         connect(&dlg,SIGNAL(KSignal(const SIG_TYPE&,void *)),this,SIGNAL(KSignal(const SIG_TYPE&,void *)));
         connect(this,SIGNAL(KSignal(const SIG_TYPE&,void *)),&dlg,SLOT(KSlot(const SIG_TYPE&,void *)));
         dlg.exec();
-
-
-        setText(QString("variables [%1]").arg(_paramMap.count()));
+        (*pVarDefObj->paramMap())["parameter table"]._value=QVariant::fromValue<xParamMap>(dlg.resultingMap());
+        setText(QString("variables [%1]").arg((*pVarDefObj->paramMap())["parameter table"]._value.value<xParamMap>().count()));
         emit modified();
     }
 }
 
-xParamMap xVUserTableDefinitionDlgItem::paramMap(){return _paramMap;}
-void xVUserTableDefinitionDlgItem::setMap(xParamMap m,xVUserTableImportDlgObj*p){_paramMap=m;pRefObj=p;}
-void xVUserTableDefinitionDlgItem::setMap(xParamMap m,xVVarDefinitionObj*p){_paramMap=m;pVarDefObj=p;}
+void xVUserTableDefinitionDlgItem::setRef(xVUserTableImportDlgObj*p){pRefObj=p;}
+void xVUserTableDefinitionDlgItem::setRef(xVVarDefinitionObj*p){pVarDefObj=p;}
 

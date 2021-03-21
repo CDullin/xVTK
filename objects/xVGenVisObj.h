@@ -10,7 +10,8 @@ Q_OBJECT
 public:
     xVGenVisObj(const QString& txt="");
     xVGenVisObj(QDataStream &d);
-    virtual void save(QDataStream& d,bool _explicit=false){xVObj_Basics::save(d,_explicit);};
+    virtual void save(QDataStream& d,bool _explicit=false) override {xVObj_Basics::save(d,_explicit);};
+    virtual void run() override;
 protected:
     void generateShape();
 };

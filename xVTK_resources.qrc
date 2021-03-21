@@ -10,5 +10,13 @@
         <file>images/traffic_light_green.png</file>
         <file>images/traffic_light_red.png</file>
         <file>images/traffic_light_yellow.png</file>
+        <file>images/import.png</file>
+        <file>images/filter.png</file>
+        <file>images/tool.png</file>
+        <file>images/user.png</file>
+        <file>images/view.png</file>
+        <file>images/arduino.png</file>
+        <file>images/logic.png</file>
+        <file>images/properties.png</file>
     </qresource>
 </RCC>

@@ -67,6 +67,9 @@ void xVMeshVisPropObj::reset()
 
 void xVMeshVisPropObj::run()
 {
+    xVGenVisPropObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
+
     setStatus(OS_RUNNING);
     vtkPolyDataMapper *mapper = nullptr;
 

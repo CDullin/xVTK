@@ -31,6 +31,7 @@ xVUserTableDefinitionDlg::~xVUserTableDefinitionDlg()
 
 int xVUserTableDefinitionDlg::exec()
 {
+    qApp->processEvents();
     sourceActivated(ui->pControlledObjCB->currentIndex());
     return QDialog::exec();
 }
@@ -93,7 +94,7 @@ void xVUserTableDefinitionDlg::addItem()
            if (key.isEmpty() || ::_globalNameSpace.contains(key))
            {
                long id=1;
-               if (key.isEmpty()) key="$VAR";
+               if (key.isEmpty()) key="VAR";
                QString s=key+QString("%1").arg(id);
                while (::_globalNameSpace.contains(s))
                {
@@ -135,7 +136,7 @@ void xVUserTableDefinitionDlg::removeItem()
     else emit KSignal(ST_MSG,new QString("no selected item to remove found"));
 }
 
-void xVUserTableDefinitionDlg::addInputParam(const QString& key,xParamMap* p,xAbstractBasisObj* pVObj)
+void xVUserTableDefinitionDlg::addInputParam(const QString& key,xParamMap* p,xVAbstractBaseObj* pVObj)
 {
     if (_whatToDefineMp.contains(key)) return;
     ui->pControlledObjCB->addItem(key);
@@ -146,15 +147,18 @@ void xVUserTableDefinitionDlg::sourceActivated(int i)
 {
     if (_whatToDefineMp.contains(ui->pControlledObjCB->currentText()))
     {
+        qApp->processEvents();
+        ui->pSrcPropTable->hide();
         ui->pSrcPropTable->updateTable(_whatToDefineMp[ui->pControlledObjCB->currentText()].pParamMap,
                 _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj);
+        ui->pSrcPropTable->show();
     }
 }
 
-void xVUserTableDefinitionDlg::setOutputParam(xParamMap* p,xAbstractBasisObj* pVObj)
+void xVUserTableDefinitionDlg::setOutputParam(xParamMap p,xVAbstractBaseObj* pVObj)
 {
-    pCopyParamMp=new xParamMap(*p);
-    ui->pTgtPropTable->updateTable(p,pVObj);
+    pCopyParamMp=new xParamMap(p);
+    ui->pTgtPropTable->updateTable(new xParamMap(p),pVObj);
 }
 
 void xVUserTableDefinitionDlg::moveIn()
@@ -186,6 +190,11 @@ void xVUserTableDefinitionDlg::moveOut()
         (*ui->pTgtPropTable->paramMap()).remove(key);
         ui->pTgtPropTable->updateTable();
     }
+}
+
+xParamMap xVUserTableDefinitionDlg::resultingMap()
+{
+    return (*ui->pTgtPropTable->paramMap());
 }
 
 void xVUserTableDefinitionDlg::accept()

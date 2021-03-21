@@ -9,6 +9,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
+#include <vtkOrientationMarkerWidget.h>
+#include <vtkAxesActor.h>
 
 class xV3DVisObj:public xVGenVisObj
 {
@@ -29,6 +31,9 @@ protected:
     vtkRenderer* pRenderer=nullptr;
     vtkRenderWindow *pRenderWin=nullptr;
     vtkRenderWindowInteractor *pRenderWindowInteractor=nullptr;
+    vtkOrientationMarkerWidget *pOrientationMaker=nullptr;
+    vtkAxesActor* pAxes= nullptr;
+    vtkRenderWindowInteractor* pAxesInteractor = nullptr;
 };
 
 #endif // XV3DVISOBJ_H

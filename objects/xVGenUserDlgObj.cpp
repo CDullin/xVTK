@@ -24,6 +24,11 @@ xVGenUserDlgObj::xVGenUserDlgObj(const QString& txt):xVObj_Basics()
     connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 }
 
+void xVGenUserDlgObj::run()
+{
+    xVObj_Basics::run();
+}
+
 void xVGenUserDlgObj::generateShape()
 {
     QPainterPath path;

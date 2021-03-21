@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QToolButton>
 #include "xVTypes.h"
+#include "xVAbstractBaseObj.h"
 
 namespace Ui {
 class xVUserTableDefinitionDlg;
@@ -23,10 +24,10 @@ public:
     struct DEF_NODE
     {
     public:
-        xAbstractBasisObj* pRefObj = nullptr;       // nullptr if global namespace
+        xVAbstractBaseObj* pRefObj = nullptr;       // nullptr if global namespace
         xParamMap* pParamMap = nullptr;
         DEF_NODE(){}
-        DEF_NODE(xAbstractBasisObj* pO,xParamMap* pP){
+        DEF_NODE(xVAbstractBaseObj* pO,xParamMap* pP){
             pRefObj=pO;
             pParamMap=pP;
         }
@@ -35,10 +36,11 @@ public:
     explicit xVUserTableDefinitionDlg(QWidget *parent = nullptr);
     ~xVUserTableDefinitionDlg();
 
-    void addInputParam(const QString& key,xParamMap* p,xAbstractBasisObj* pVObj=nullptr);
-    void setOutputParam(xParamMap* p,xAbstractBasisObj* pVObj=nullptr);
+    void addInputParam(const QString& key,xParamMap* p,xVAbstractBaseObj* pVObj=nullptr);
+    void setOutputParam(xParamMap p,xVAbstractBaseObj* pVObj=nullptr);
     void setToDefinitionMode();
     void setToControlMode();
+    xParamMap resultingMap();
 
     void accept() override;
     void reject() override;

@@ -13,7 +13,7 @@
 
 using namespace std;
 
-xVObj_Basics::xVObj_Basics():xAbstractBasisObj(){
+xVObj_Basics::xVObj_Basics():xVAbstractBaseObj(){
 
     pUpdateTimer = new QTimer();
     pUpdateTimer->setInterval(1000);
@@ -56,8 +56,9 @@ xVObj_Basics::xVObj_Basics():xAbstractBasisObj(){
     setStatus(OS_UPDATE_NEEDED);
 };
 
-xVObj_Basics::xVObj_Basics(QDataStream& d):xAbstractBasisObj(d)
+xVObj_Basics::xVObj_Basics(QDataStream& d):xVAbstractBaseObj(d)
 {
+    quint64 _pos = d.device()->pos();
     d >> _maxInput >> _maxOutput >> _status;
 
     quint16 v; d >> v;
@@ -107,6 +108,12 @@ xVObj_Basics::xVObj_Basics(QDataStream& d):xAbstractBasisObj(d)
     setStatus(OS_UPDATE_NEEDED);
 }
 
+void xVObj_Basics::run()
+{
+    status()==OS_UPDATE_NEEDED ? emit KSignal(ST_MSG,new QString(QString("object %1 started").arg((*paramMap())["name"]._value.toString()))) :
+        KSignal(ST_MSG,new QString(QString("object %1 restarted").arg((*paramMap())["name"]._value.toString())));
+}
+
 int xVObj_Basics::countOf(xCONNECTOR_TYPE type)
 {
     int res=0;
@@ -137,7 +144,7 @@ xConnector* xVObj_Basics::activeConnector()
 
 void xVObj_Basics::save(QDataStream &d, bool _explicit)
 {
-    xAbstractBasisObj::save(d,_explicit);
+    xVAbstractBaseObj::save(d,_explicit);
     d << _maxInput << _maxOutput << OS_UPDATE_NEEDED;
     d << (quint16)_connectorLst.count();
     for (int i=0;i<_connectorLst.count();++i)
@@ -154,14 +161,14 @@ void xVObj_Basics::paramModified(const QString& txt) {
         pTxtItem->update();
     }
 
-    // if we have outputs we need to update them as well
-
+    // beware of cycles
+    /*
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
         if ((*it2)->type()==xCT_OUTPUT && (*it2)->isEnabled())
             for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
                 (*it)->paramModified("");
-
-    emit parameterModified();
+    */
+    //emit parameterModified();
 }
 
 

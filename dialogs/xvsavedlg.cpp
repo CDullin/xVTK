@@ -1,5 +1,6 @@
 #include "xvsavedlg.h"
 #include "ui_xvsavedlg.h"
+#include "xvsettingswdgt.h"
 #include <QFileDialog>
 #include <QLineEdit>
 #include <QDateTimeEdit>
@@ -14,10 +15,11 @@ xVSaveDlg::xVSaveDlg(QWidget *parent) :
 
 void xVSaveDlg::browseFolder()
 {
-    _path=QFileDialog::getExistingDirectory(0,"pick save path");
+    _path=QFileDialog::getExistingDirectory(0,"pick save path",::_settings["export dashboard path"]._value.toString());
     if (!_path.isEmpty())
     {
         QFileInfo info(_path);
+        ::_settings["export dashboard path"]._value = QString(info.absoluteFilePath()+"/..");
         ui->pFolderLEdit->setText(info.baseName());
     }
 }

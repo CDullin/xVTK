@@ -131,6 +131,8 @@ vtkPolyData* xVPolyObj::ReadPolyData(const char* fileName)
 
 void xVPolyObj::run()
 {
+    xVGenImpObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
     // test if file name exists
     QFileInfo pInfo=_paramMp["file name"]._value.value<QFileInfo>();
     if (pInfo.isFile() && pInfo.exists())

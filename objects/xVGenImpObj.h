@@ -18,8 +18,9 @@ public:
         }
         emit parameterModified();
     }
-    virtual void save(QDataStream& d,bool _explicit=false){
+    virtual void save(QDataStream& d,bool _explicit=false) override {
         xVObj_Basics::save(d,_explicit);};
+    virtual void run() override;
 protected:
     virtual void generateShape();
 };

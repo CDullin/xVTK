@@ -1,4 +1,5 @@
 #include "xvcreateobjtreewdgt.h"
+#include "xviconfactory.h"
 
 xVCreateObjTreeWdgt::xVCreateObjTreeWdgt(QWidget* parent):QTreeWidget(parent)
 {
@@ -39,6 +40,7 @@ QTreeWidgetItem* xVCreateObjTreeWdgt::pickOrCreateParentItem(const QString& patt
     if (!pItem)
     {
         pItem = new QTreeWidgetItem(QStringList() << pattern);
+        pItem->setIcon(0,::_iconFactory.icon(pattern));
         addTopLevelItem(pItem);
         pItem->setExpanded(true);
     }

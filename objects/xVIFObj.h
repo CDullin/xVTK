@@ -10,15 +10,17 @@ Q_OBJECT
 public:
     xVIFObj(const QString& txt="");
     xVIFObj(QDataStream &d);
-    virtual void save(QDataStream& d,bool _explicit=false){xVObj_Basics::save(d,_explicit);};
+    virtual void save(QDataStream& d,bool _explicit=false) override {xVObj_Basics::save(d,_explicit);};
     virtual void run() override;
+    virtual void reset() override;
 signals:
     void addVisWdgt(QWidget*);
 protected:
     void generateShape();
-    xConnector *pNoOutputCon=nullptr;
     QGraphicsSimpleTextItem *pYesItem;
     QGraphicsSimpleTextItem *pNoItem;
+    xConnector* pYesOutputCon;
+    xConnector* pNoOutputCon;
 };
 
 

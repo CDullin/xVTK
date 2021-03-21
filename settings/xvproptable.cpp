@@ -1,10 +1,11 @@
 #include "xvproptable.h"
+#include "xVObjectTypes.h"
 #include "xvEvalCondition.h"
 #include "xVCustomTableItems.h"
-#include "xVVolumeVisPropObj.h"
 #include "xVUserTableDefinitionDlgItem.h"
 #include "xVEquationDlgItem.h"
 #include <QComboBox>
+#include <QApplication>
 
 xVPropTable::xVPropTable(QWidget* parent):QTableWidget(parent)
 {
@@ -147,7 +148,7 @@ void xVPropTable::customItemChanged()
                     xVUserTableDefinitionDlgItem *pItem = dynamic_cast<xVUserTableDefinitionDlgItem*>(wdgt);
                     if (pItem)
                     {
-                        ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(pItem->paramMap());
+                        // data should be directly modified by the dialog
                     }
                 }
                 if (var.userType()==QMetaType::type(("xVEvalCondition")))
@@ -167,7 +168,7 @@ void xVPropTable::customItemChanged()
                     QComboBox *pCB = dynamic_cast<QComboBox*>(wdgt);
                     if (pCB) {
                         *(QString*)((*pParamMpRef)[item(row,0)->text()]._value.data())=pCB->currentText();
-                        updateTable(pParamMpRef,pCurrentObj);
+                        updateRowVisibility();
                     }
                 }
             }
@@ -217,16 +218,51 @@ void xVPropTable::subgroupChanged()
     }
 }
 
-void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasisObj* pObj)
+void xVPropTable::setOnlyRealDataTypesVisible(bool b)
 {
+    _onlyShowRealDatatypes =b;
+    updateTable();
+}
+
+void xVPropTable::updateRowVisibility()
+{
+    if (pParamMpRef==nullptr) return;
+    // get condition table
+    QStringList _conditions;
+    for (QMap<QString,xPROP_TYPE>::iterator it=pParamMpRef->begin();it!=pParamMpRef->end();++it)
+    {
+        if (it->_value.type()==QVariant::String && ::_optionLsts.contains(it.key()))
+            _conditions.append(it.value()._value.toString());
+    }
+
+    for (int i=0;i<rowCount();++i)
+    {
+        if ((*pParamMpRef).contains(item(i,0)->text()))
+        {
+            xPROP_TYPE prop=(*pParamMpRef)[item(i,0)->text()];
+            if (!prop._subGrp.isEmpty() && !_conditions.contains(prop._subGrp)) setRowHidden(i,true);
+            else setRowHidden(i,false);
+        }
+    }
+}
+
+void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBaseObj* pObj)
+{
+    if (pParamMp==nullptr) return;
+
     disconnect(this,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(itemChanged_SLOT(QTableWidgetItem *)));
+    setUpdatesEnabled(false);
 
     pParamMpRef=pParamMp;
     pCurrentObj=pObj;
 
     for (int i=0;i<rowCount();++i) {
-        if (cellWidget(i,1)!=nullptr)
-            removeCellWidget(i,1);
+        for (int j=0;j<columnCount();++j)
+            if (cellWidget(i,j)!=nullptr)
+            {
+                delete cellWidget(i,1);
+                //removeCellWidget(i,1);
+            }
     }
 
     setRowCount(0);
@@ -284,6 +320,7 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
         QString key;
         xPROP_TYPE prop=propForId(pParamMp,idVec[i],key);
         setRowCount(r+1);
+        qApp->processEvents();
         if (!prop._subGrp.isEmpty() && !_conditions.contains(prop._subGrp)) setRowHidden(r,true);
         else setRowHidden(r,false);
         QTableWidgetItem *pItem0=new QTableWidgetItem(key);
@@ -292,6 +329,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
         bool handledByDialog = handeledByDialogLst.contains(key);
         handledByDialog ? pItem0->setIcon(QIcon(QPixmap("://images/lock_closed.png"))) : pItem0->setIcon(QIcon(QPixmap("://images/lock_open.png")));
         setItem(r,0,pItem0);
+
+        bool _realDataType = false;
 
         if (prop.pRefObj!=nullptr)
         {
@@ -316,6 +355,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
             setCellWidget(r,1,pItem);
             connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
             connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+
+            _realDataType = true;
         }
         break;
         case QVariant::Double:
@@ -327,6 +368,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
             setCellWidget(r,1,pItem);
             connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
             connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+
+            _realDataType = true;
         }
         break;
         case QVariant::Bool:
@@ -336,6 +379,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
             setCellWidget(r,1,pItem);
             connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
             connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+
+            _realDataType = true;
         }
         break;
         case QVariant::Color:
@@ -359,7 +404,10 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
                 connect(pCB,SIGNAL(activated(int)),this,SLOT(customItemChanged()));
                 connect(pCB,SIGNAL(activated(int)),this,SLOT(subgroupChanged()));
             }
-            else setItem(r,1,new QTableWidgetItem(prop._value.toString()));
+            else {
+                setItem(r,1,new QTableWidgetItem(prop._value.toString()));
+                _realDataType = true;
+            }
         }
             break;
         case QVariant::Vector3D:
@@ -379,15 +427,15 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
             if ((int)prop._value.userType()==QMetaType::type("xParamMap"))
             {
                 xVUserTableDefinitionDlgItem* pItem = new xVUserTableDefinitionDlgItem();
-                if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setMap(prop._value.value<xParamMap>(),dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
-                if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setMap(::_globalNameSpace,dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
+                if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setRef(dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
+                if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setRef(dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
             }
             if ((int)prop._value.userType()==QMetaType::type("xVEvalCondition"))
             {
-                xVEquationDlgItem* pItem = new xVEquationDlgItem(dynamic_cast<xVObj_Basics*>(pCurrentObj));
+                xVEquationDlgItem* pItem = new xVEquationDlgItem(prop._value.value<xVEvalCondition>(),dynamic_cast<xVObj_Basics*>(pCurrentObj));
                 //if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setMap(prop._value.value<xParamMap>(),dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
                 //if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setMap(::_globalNameSpace,dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
                 setCellWidget(r,1,pItem);
@@ -403,6 +451,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+
+                _realDataType = true;
             }
             if ((int)prop._value.userType()==QMetaType::type("xLimitedDouble"))
             {
@@ -414,6 +464,8 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+
+                _realDataType = true;
             }
             if ((int)prop._value.userType()==QMetaType::type("QFileInfo"))
             {
@@ -468,9 +520,12 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xAbstractBasis
             pItem->setForeground(Qt::red);
             pItem->setBackground(Qt::yellow);
             setItem(r,1,pItem);
-        }
+        }        
+        setRowHidden(r,!_realDataType && _onlyShowRealDatatypes);
         ++r;
     }
+
+    setUpdatesEnabled(true);
     setColumnHidden(2,!_refObjFound || _objectColumnStaysHidden);
     resizeColumnToContents(0);
     connect(this,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(itemChanged_SLOT(QTableWidgetItem *)));

@@ -37,6 +37,11 @@ xVGenVisPropObj::xVGenVisPropObj(QDataStream &d):xVObj_Basics(d)
     }
 }
 
+void xVGenVisPropObj::run()
+{
+    xVObj_Basics::run();
+}
+
 void xVGenVisPropObj::generateShape()
 {
     QPainterPath path;

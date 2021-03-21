@@ -71,6 +71,8 @@ void xVVolObj::reset()
 
 void xVVolObj::run()
 {
+    xVGenImpObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
     // check if we get data streamed or if we load it
     QFileInfo pInfo=_paramMp["file name"]._value.value<QFileInfo>();
     if (pInfo.isFile() && pInfo.exists())
@@ -146,6 +148,10 @@ void xVVolObj::run()
 
             _outputParamMp["volume data"]._value = QVariant::fromValue(pDataImporter->GetOutput());
             _outputParamMp["volume data"]._id=0;
+            _outputParamMp["dimension"]._value=_paramMp["dimension"]._value;
+            _outputParamMp["dimension"]._id=1;
+            _outputParamMp["resolution"]._id=2;
+            _outputParamMp["resolution"]._value=_paramMp["resolution"]._value;
 
             setStatus(OS_VALID);
         }

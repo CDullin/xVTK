@@ -5,10 +5,25 @@
 #include "xVTypes.h"
 #include "xVHistoNodeItem.h"
 
-class xConnectorObj:public xAbstractBasisObj
+class xConnectorObj:public xVAbstractBaseObj
 {
 Q_OBJECT
 public:
+
+    struct SECTION
+    {
+    public:
+        float _pos;
+        bool _horizontal;
+        SECTION(){_pos=0;_horizontal=true;}
+        SECTION(const float& p,const bool& h){_pos=p;_horizontal=h;}
+        SECTION(QDataStream &d)
+        {
+            d >> _pos >> _horizontal;
+        }
+        void save(QDataStream& d){ d << _pos << _horizontal;}
+    };
+
     xConnectorObj(QDataStream &d);
     xConnectorObj(xConnector* pIn,xConnector* pOut,bool _paramConnection=false);
     ~xConnectorObj();
@@ -27,6 +42,9 @@ public:
         update();
     }
     virtual void save(QDataStream&, bool _explicit=false) override;
+
+    void addNodeAtCursorPos();
+
 public slots:
     void update();
 signals:
@@ -34,10 +52,12 @@ signals:
 
 protected slots:
     void updatePath();
+    void nodeMoved(QPointF,const int&,xVHistoNodeItem*);
 
 protected:
     QGraphicsPathItem *generateArrow();
     void createPath();
+    void addNode(QPointF p,int i,xVHistoNodeItem::HNI_MODE m);
 
     xConnector *pInObj=nullptr,*pOutObj=nullptr;
     xGroupItem *pGrpItem=nullptr;
@@ -55,6 +75,10 @@ protected:
     QGraphicsItemGroup *pEndGrp;
 
     QList <xVHistoNodeItem*> _nodeLst;
+    QList <SECTION> _sectionLst;
+
+    QPointF oldIPnt,oldOPnt;
+    bool _dontResetControlPoints = false;
 };
 
 #endif // XVCONNECTOROBJ_H

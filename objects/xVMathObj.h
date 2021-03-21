@@ -15,9 +15,6 @@ public:
     virtual void save(QDataStream& d,bool _explicit=false) override;
     virtual void reset() override;
 
-public slots:
-    virtual void paramModified(const QString& txt="") override;
-
 protected:
     virtual void generateShape();
 };

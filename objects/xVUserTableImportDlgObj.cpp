@@ -21,6 +21,8 @@ void xVUserTableImportDlgObj::save(QDataStream& d,bool _explicit)
 
 void xVUserTableImportDlgObj::run()
 {
+    xVGenUserDlgObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
     setStatus(OS_RUNNING);
     // override values of the connected parameter object or the global namespace
     emit KSignal(ST_MSG,new QString("dialog started"));
@@ -30,6 +32,7 @@ void xVUserTableImportDlgObj::run()
     xParamMap map(_paramMp["parameter table"]._value.value<xParamMap>());
     dlg.setMap(&map,this);
     dlg.exec();
+    _paramMp["parameter table"]._value=QVariant::fromValue<xParamMap>(map);
     for (QList<xConnector*>::iterator it=connectorLst()->begin();it!=connectorLst()->end();++it)
         if ((*it)->type()==xCT_OUTPUT)
             for (QList <xVObj_Basics*>::iterator it2=(*it)->connectedObjects()->begin();it2!=(*it)->connectedObjects()->end();++it2)

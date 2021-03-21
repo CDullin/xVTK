@@ -21,12 +21,12 @@ void recursiveRest(xVObj_Basics* pObj)
 void xVTKDlg::reset(bool verbose)
 {
     if (verbose && QMessageBox::question(0,"xVTK - question","Resetting the dashboard will result "
-                                        "in destroying all visulization windows and removing all data. "
+                                        "in destroying all visualization windows and removing all data. "
                                         "Do you really like to do that?")==QMessageBox::No) return;
 
     // find all end points / visulizations
     QList <xVObj_Basics*> _endPointLst;
-    for (QList<xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList<xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
     {
         xVObj_Basics* pVObj = dynamic_cast<xVObj_Basics*>(*it);
         // we take all those that have no output
@@ -46,7 +46,7 @@ void xVTKDlg::reset(bool verbose)
         recursiveRest(*it);
     }
     // then we reset all remaining objects
-    for (QList<xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList<xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
     {
         xVObj_Basics* pVObj = dynamic_cast<xVObj_Basics*>(*it);
         // we take all those that have no output

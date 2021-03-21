@@ -12,16 +12,14 @@ class xVUserTableDefinitionDlgItem : public QToolButton
     Q_OBJECT
 public:
     xVUserTableDefinitionDlgItem(QWidget* parent=nullptr);
-    xParamMap paramMap();
-    void setMap(xParamMap m,xVUserTableImportDlgObj*);
-    void setMap(xParamMap m,xVVarDefinitionObj*);
+    void setRef(xVUserTableImportDlgObj*);
+    void setRef(xVVarDefinitionObj*);
 signals:
     void modified();
     void KSignal(const SIG_TYPE& ,void *);
 protected slots:
     void clicked_SLOT();
 protected:
-    xParamMap _paramMap;
     xVUserTableImportDlgObj* pRefObj=nullptr;
     xVVarDefinitionObj* pVarDefObj=nullptr;
 };

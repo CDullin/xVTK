@@ -10,11 +10,11 @@ class xVIconFactory
 public:
     xVIconFactory();
     bool contains(const QString& pattern){return _iconMp.contains(pattern);}
-    QPixmap pixmap(const QString& pattern){return _iconMp[pattern];}
+    QPixmap pixmap(const QString& pattern){return QPixmap(_iconMp[pattern]);}
     QIcon icon(const QString& pattern){return QIcon(pixmap(pattern));}
 protected:
     void populateMap();
-    QMap <QString,QPixmap> _iconMp;
+    QMap <QString,QString> _iconMp;
 };
 
 extern xVIconFactory _iconFactory;

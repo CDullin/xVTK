@@ -3,19 +3,28 @@
 #include <math.h>
 #include <stdlib.h>
 #include <QGraphicsScene>
+#include <QGraphicsView>
 #include <QDateTime>
+#include <QCursor>
+#include <math.h>
 
 using namespace std;
 
-xConnectorObj::xConnectorObj(QDataStream &d):xAbstractBasisObj(d)
+xConnectorObj::xConnectorObj(QDataStream &d):xVAbstractBaseObj(d)
 {
+    _type = xVOT_CONNECTOR;
     d >> _id;
     d >> _paramConnection;
     // connections are done by main dlg
+    quint16 c;d >> c;
+    for (int i=0;i<c;++i)
+        _sectionLst.append(SECTION(d));
+    _dontResetControlPoints = true;
 }
 
-xConnectorObj::xConnectorObj(xConnector* pIn,xConnector* pOut,bool _param):xAbstractBasisObj()
+xConnectorObj::xConnectorObj(xConnector* pIn,xConnector* pOut,bool _param):xVAbstractBaseObj()
 {
+    _type = xVOT_CONNECTOR;
     _paramConnection = _param;
     pInObj=pIn;
     pOutObj=pOut;
@@ -46,214 +55,72 @@ QGraphicsPathItem* xConnectorObj::generateArrow()
 
 void xConnectorObj::updatePath()
 {
-    for (int i=0;i<_arrowLst.count();++i)
-        pGrpItem->scene()->removeItem(_arrowLst[i]);
-    _arrowLst.clear();
-
-    QList <QPointF> _pntLst;
     QPointF oPnt = pOutObj->pos();
     QPointF iPnt; _paramConnection ? iPnt = pInObj->pos() : iPnt = pInObj->pos();
-
     if (pInObj->type()==xCT_INPUT) iPnt-=QPointF(15,0);
     else iPnt-=QPointF(0,18);
 
-    _pntLst.append(oPnt);
-    for (int i=0;i<_nodeLst.count();++i)
-        _pntLst.append(_nodeLst[i]->pos());
-    _pntLst.append(iPnt);
+    for (int i=0;i<_arrowLst.count();++i)
+        pGrpItem->scene()->removeItem(_arrowLst[i]);
+    _arrowLst.clear();
 
     QPainterPath path;
     path.moveTo(oPnt);
     path.addEllipse(QRectF(oPnt.x()-2,oPnt.y()-2,4,4));
     path.moveTo(oPnt);
-
-    float dxx = iPnt.x()-oPnt.x();
-    float dyy = iPnt.y()-oPnt.y();
-
-    bool _horizontal = fabs(dxx)>fabs(dyy);
-    if (dxx<0) _horizontal=false;
-    //_horizontal=!_horizontal;
-
-    for (int j=0;j<_pntLst.count()-1;++j)
+    for (int i=0;i<_sectionLst.count()-1;++i)
     {
-        float dx = _pntLst[j+1].x()-_pntLst[j].x();
-        float dy = _pntLst[j+1].y()-_pntLst[j].y();
-
-        if (_horizontal)
+        _sectionLst[i]._horizontal ? path.lineTo(_sectionLst[i+1]._pos,_sectionLst[i]._pos) : path.lineTo(_sectionLst[i]._pos,_sectionLst[i+1]._pos);
+        xVHistoNodeItem *pNode=nullptr;
+        for (int j=0;j<_nodeLst.count();++j)
+            if (_nodeLst[j]->nr()==i)
+                pNode=_nodeLst[j];
+        if (i>0)
         {
-            path.lineTo(_pntLst[j].x()+dx/2,_pntLst[j].y());
-            path.lineTo(_pntLst[j].x()+dx/2,_pntLst[j+1].y());
-            if (fabs(dx)>20)
+            if (!pNode)
+                _sectionLst[i]._horizontal ? addNode(QPointF((_sectionLst[i+1]._pos+_sectionLst[i-1]._pos)/2.0,_sectionLst[i]._pos),i,xVHistoNodeItem::HNIM_VERTICAL) :
+                    addNode(QPointF(_sectionLst[i]._pos,(_sectionLst[i+1]._pos+_sectionLst[i-1]._pos)/2.0),i,xVHistoNodeItem::HNIM_HORIZONTAL);
+            else
             {
-                QGraphicsPathItem *pArrow=generateArrow();
-                pArrow->setPos(_pntLst[j].x()+dx/4,_pntLst[j].y());
-                if (dx<0) pArrow->setRotation(180);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
-
-                if (fabs(dy)>20)
-                {
-                    pArrow=generateArrow();
-                    pArrow->setPos(_pntLst[j].x()+dx/2,_pntLst[j].y()+dy/2);
-                    pArrow->setRotation(90);
-                    if (dy<0) pArrow->setRotation(-90);
-                    pGrpItem->addToGroup(pArrow);
-                    _arrowLst.append(pArrow);
-                }
-
-                pArrow=generateArrow();
-                pArrow->setPos(_pntLst[j].x()+3*dx/4,_pntLst[j+1].y());
-                if (dx<0) pArrow->setRotation(180);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
+                _sectionLst[i]._horizontal ? pNode->setPos((_sectionLst[i+1]._pos+_sectionLst[i-1]._pos)/2.0,_sectionLst[i]._pos) :
+                    pNode->setPos(_sectionLst[i]._pos,(_sectionLst[i+1]._pos+_sectionLst[i-1]._pos)/2.0);
             }
-        }
-        else
-        {
-            path.lineTo(_pntLst[j].x(),_pntLst[j].y()+dy/2);
-            path.lineTo(_pntLst[j+1].x(),_pntLst[j].y()+dy/2);
-            if (fabs(dy)>20)
-            {
-                QGraphicsPathItem *pArrow=generateArrow();
-                pArrow->setPos(_pntLst[j].x(),_pntLst[j].y()+dy/4);
-                pArrow->setRotation(90);
-                if (dy<0) pArrow->setRotation(-90);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
-
-                if (fabs(dx)>20)
-                {
-                    pArrow=generateArrow();
-                    pArrow->setPos(_pntLst[j].x()+dx/2,_pntLst[j].y()+dy/2);
-                    if (dx<0) pArrow->setRotation(180);
-                    pGrpItem->addToGroup(pArrow);
-                    _arrowLst.append(pArrow);
-                }
-
-                pArrow=generateArrow();
-                pArrow->setPos(_pntLst[j+1].x(),_pntLst[j].y()+3*dy/4);
-                pArrow->setRotation(90);
-                if (dy<0) pArrow->setRotation(-90);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
-            }
-        }
-        path.lineTo(_pntLst[j+1]);
-        _horizontal=!_horizontal;
-    }
-    pPathItem->setPath(path);
-}
-
-void xConnectorObj::createPath()
-{
-    for (int i=0;i<_arrowLst.count();++i)
-    {
-        pGrpItem->scene()->removeItem(_arrowLst[i]);
-    }
-    _arrowLst.clear();
-    for (int i=0;i<_nodeLst.count();++i)
-    {
-        pGrpItem->scene()->removeItem(_nodeLst[i]);
-    }
-    _nodeLst.clear();
-
-    QPointF oPnt = pOutObj->pos();
-    QPointF iPnt; _paramConnection ? iPnt = pInObj->pos() : iPnt = pInObj->pos();
-
-    if (pInObj->type()==xCT_INPUT) iPnt-=QPointF(15,0);
-    else iPnt-=QPointF(0,18);
-
-    float dx = iPnt.x()-oPnt.x();
-    float dy = iPnt.y()-oPnt.y();
-
-    QPainterPath path;
-    path.moveTo(oPnt);
-    path.addEllipse(QRectF(oPnt.x()-2,oPnt.y()-2,4,4));
-    path.moveTo(oPnt);
-
-    if ((fabs(dx)>fabs(dy) && dx>0) || (dy<0 && pInObj->type()==xCT_PARAMETER))
-    {
-        path.lineTo(oPnt.x()+dx/2,oPnt.y());
-        path.lineTo(oPnt.x()+dx/2,iPnt.y());
-        xVHistoNodeItem *p0=new xVHistoNodeItem(0,xVHistoNodeItem::HNIM_VERTICAL|xVHistoNodeItem::HNIM_HORIZONTAL);
-        p0->setPos(oPnt.x()+dx/2,oPnt.y()+dy/2);p0->setGraphicsEffect(0);p0->setLineColor(Qt::black);p0->setColor(QColor(0,0,0,0));
-        xVHistoNodeItem *p1=new xVHistoNodeItem(0,xVHistoNodeItem::HNIM_VERTICAL|xVHistoNodeItem::HNIM_HORIZONTAL);
-        p1->setPos(oPnt.x()+dx/2,iPnt.y());p1->setGraphicsEffect(0);p1->setLineColor(Qt::black);p1->setColor(QColor(0,0,0,0));
-        _nodeLst.append(p0);
-        //_nodeLst.append(p1);
-        connect(p0,SIGNAL(moved(QPointF,const int&,xVHistoNodeItem*)),this,SLOT(updatePath()));
-        connect(p1,SIGNAL(moved(QPointF,const int&,xVHistoNodeItem*)),this,SLOT(updatePath()));
-        pGrpItem->addToGroup(p0);
-        //pGrpItem->addToGroup(p1);
-
-        if (fabs(dx)>40)
-        {
-            QGraphicsPathItem *pArrow=generateArrow();
-            pArrow->setPos(oPnt.x()+dx/4,oPnt.y());
-            if (dx<0) pArrow->setRotation(180);
-            pGrpItem->addToGroup(pArrow);
-            _arrowLst.append(pArrow);
-
-            if (fabs(dy)>20)
-            {
-                pArrow=generateArrow();
-                pArrow->setPos(oPnt.x()+dx/2,oPnt.y()+dy/2);
-                pArrow->setRotation(90);
-                if (dy<0) pArrow->setRotation(-90);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
-            }
-
-            pArrow=generateArrow();
-            pArrow->setPos(oPnt.x()+3*dx/4,iPnt.y());
-            if (dx<0) pArrow->setRotation(180);
-            pGrpItem->addToGroup(pArrow);
-            _arrowLst.append(pArrow);
-        }
-    }
-    else
-    {
-        path.lineTo(oPnt.x(),oPnt.y()+dy/2);
-        path.lineTo(iPnt.x(),oPnt.y()+dy/2);
-
-        xVHistoNodeItem *p0=new xVHistoNodeItem(0,xVHistoNodeItem::HNIM_VERTICAL|xVHistoNodeItem::HNIM_HORIZONTAL);
-        p0->setPos(oPnt.x()+dx/2,oPnt.y()+dy/2);p0->setGraphicsEffect(0);p0->setLineColor(Qt::black);p0->setColor(QColor(0,0,0,0));
-        xVHistoNodeItem *p1=new xVHistoNodeItem(0,xVHistoNodeItem::HNIM_VERTICAL|xVHistoNodeItem::HNIM_HORIZONTAL);
-        p1->setPos(iPnt.x(),oPnt.y()+dy/2);p1->setGraphicsEffect(0);p1->setLineColor(Qt::black);p1->setColor(QColor(0,0,0,0));
-        _nodeLst.append(p0);
-        //_nodeLst.append(p1);
-        connect(p0,SIGNAL(moved(QPointF,const int&,xVHistoNodeItem*)),this,SLOT(updatePath()));
-        connect(p1,SIGNAL(moved(QPointF,const int&,xVHistoNodeItem*)),this,SLOT(updatePath()));
-        pGrpItem->addToGroup(p0);
-        //pGrpItem->addToGroup(p1);
-
-        if (fabs(dy)>40)
-        {
-            QGraphicsPathItem *pArrow=generateArrow();
-            pArrow->setPos(oPnt.x(),oPnt.y()+dy/4);
-            pArrow->setRotation(90);
-            if (dy<0) pArrow->setRotation(-90);
-            pGrpItem->addToGroup(pArrow);
-            _arrowLst.append(pArrow);
-
-            if (fabs(dx)>20)
-            {
-                pArrow=generateArrow();
-                pArrow->setPos(oPnt.x()+dx/2,oPnt.y()+dy/2);
-                if (dx<0) pArrow->setRotation(180);
-                pGrpItem->addToGroup(pArrow);
-                _arrowLst.append(pArrow);
-            }
-
-            pArrow=generateArrow();
-            pArrow->setPos(iPnt.x(),oPnt.y()+3*dy/4);
-            pArrow->setRotation(90);
-            if (dy<0) pArrow->setRotation(-90);
-            pGrpItem->addToGroup(pArrow);
-            _arrowLst.append(pArrow);
         }
     }
     path.lineTo(iPnt);
+    pPathItem->setPath(path);
+
+    // we put at path length
+    float len=path.length();
+    float distance = 50;
+    for (long j=0;j<len/distance-1;++j)
+    {
+        float rel = (((double)j+1)*distance)/len;
+        if (rel<0 || (rel+0.005)>1) continue;
+        QPointF pos = path.pointAtPercent(rel);
+        QPointF posAhead = path.pointAtPercent(rel+0.005);
+        float _angle = 0;
+        if (fabs(posAhead.x()-pos.x())<0.00001) // vertical
+        {
+            if (posAhead.y()>pos.y()) // up
+                _angle=90;
+            else
+                _angle=-90;
+        }
+        else
+        {
+            if (posAhead.x()>pos.x())
+                _angle = 0;
+            else
+                _angle = 180;
+        }
+        QGraphicsPathItem *pArrow=generateArrow();
+        pArrow->setPos(pos);
+        pArrow->setRotation(_angle);
+        pGrpItem->addToGroup(pArrow);
+        _arrowLst.append(pArrow);
+    }
+
     // add end symbol
     QPainterPath endPath;
     if (pInObj->type()==xCT_INPUT)
@@ -274,10 +141,113 @@ void xConnectorObj::createPath()
     pEndItem->setPath(endPath);
     pEndGrp->setPos(iPnt);
     pPathItem->setPath(path);
-    pGrpItem->setBoundingRectSize(QRectF(oPnt,iPnt));
 
-    for (int i=0;i<_nodeLst.count();++i)
-        _nodeLst[i]->setVisible(false);
+    for (int i=0;i<_nodeLst.count();++i) _nodeLst[i]->setVisible(_selected);
+    for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(!_selected && _paramMp["show arrows"]._value.toBool());
+
+    _dontResetControlPoints = false;
+}
+
+void xConnectorObj::addNodeAtCursorPos()
+{
+    QPoint globalPos = QCursor::pos();
+    QPoint viewPos = pGrpItem->scene()->views().at(0)->mapFromGlobal(globalPos);
+    QPointF scenePos = pGrpItem->scene()->views().at(0)->mapToScene(viewPos);
+    QPointF itemPos=pGrpItem->mapFromScene(scenePos);
+
+    // find insert position
+    int _insertPos = _sectionLst.count()-1;
+    if (_sectionLst.at(_insertPos)._horizontal)
+    {
+        _sectionLst.insert(_insertPos,SECTION(itemPos.y(),true));
+        addNode(itemPos,_insertPos,xVHistoNodeItem::HNIM_VERTICAL);
+        _sectionLst.insert(_insertPos+1,SECTION(itemPos.x(),false));
+        addNode(itemPos,_insertPos+1,xVHistoNodeItem::HNIM_HORIZONTAL);
+    }
+    else
+    {
+        _sectionLst.insert(_insertPos,SECTION(itemPos.x(),false));
+        addNode(itemPos,_insertPos,xVHistoNodeItem::HNIM_HORIZONTAL);
+        _sectionLst.insert(_insertPos+1,SECTION(itemPos.y(),true));
+        addNode(itemPos,_insertPos+1,xVHistoNodeItem::HNIM_VERTICAL);
+    }
+
+    updatePath();
+}
+
+void xConnectorObj::addNode(QPointF p,int i,xVHistoNodeItem::HNI_MODE m)
+{
+    xVHistoNodeItem* pNode=new xVHistoNodeItem(i,m,this);
+    pNode->setPos(p);
+    pNode->setColor(Qt::black);
+    pNode->setLineColor(Qt::black);
+    pNode->setGraphicsEffect(0);
+    connect(pNode,SIGNAL(moved(QPointF,const int&,xVHistoNodeItem*)),this,SLOT(nodeMoved(QPointF,const int&,xVHistoNodeItem*)));
+    pGrpItem->addToGroup(pNode);
+    _nodeLst.append(pNode);
+}
+
+QPointF snapToGrid(QGraphicsItem* item,QPointF p)
+{
+    QPointF scenePos = item->mapToScene(p);
+    /*
+    if (::_settings["snap to grid"]._value.toBool())
+    {
+        scenePos.setX(nearbyint(scenePos.x()/::_settings["grid resolution"]._value.toDouble())*::_settings["grid resolution"]._value.toDouble());
+        scenePos.setY(nearbyint(scenePos.y()/::_settings["grid resolution"]._value.toDouble())*::_settings["grid resolution"]._value.toDouble());
+    }
+    */
+    return item->mapFromScene(scenePos);
+}
+
+void xConnectorObj::nodeMoved(QPointF p,const int&,xVHistoNodeItem* pNode)
+{
+    int nr = pNode->nr();
+    pNode->setPos(snapToGrid(pNode,pNode->pos()));
+    if (nr>=0 && nr<_sectionLst.count())
+    {
+        _sectionLst[nr]._horizontal ? _sectionLst[nr]._pos=pNode->pos().y() : _sectionLst[nr]._pos=pNode->pos().x();
+        updatePath();
+    }
+}
+
+void xConnectorObj::createPath()
+{
+    if (!_dontResetControlPoints)
+    {
+        //alternating vertical and horizonal sections
+        QPointF oPnt = pOutObj->pos();
+        QPointF iPnt; _paramConnection ? iPnt = pInObj->pos() : iPnt = pInObj->pos();
+        if (pInObj->type()==xCT_INPUT) iPnt-=QPointF(15,0);
+        else iPnt-=QPointF(0,18);
+        float dx = iPnt.x()-oPnt.x();
+        float dy = iPnt.y()-oPnt.y();
+
+        _sectionLst.clear();
+        for (int j=0;j<_nodeLst.count();++j)
+        {
+            pGrpItem->removeFromGroup(_nodeLst[j]);
+            pGrpItem->scene()->removeItem(_nodeLst[j]);
+            delete _nodeLst[j];
+        }
+        _nodeLst.clear();
+
+        if (fabs(dx)>fabs(dy) && dx>0) // we start horizontal
+        {
+            _sectionLst.append(SECTION(oPnt.y(),true));
+            _sectionLst.append(SECTION(oPnt.x()+dx/2,false));
+            addNode(QPointF(oPnt.x()+dx/2,oPnt.y()+dy/2),1,xVHistoNodeItem::HNIM_HORIZONTAL);
+            _sectionLst.append(SECTION(iPnt.y(),true));
+        }
+        else
+        {
+            _sectionLst.append(SECTION(oPnt.x(),false));
+            _sectionLst.append(SECTION(oPnt.y()+dy/2,true));
+            addNode(QPointF(oPnt.x()+dx/2,oPnt.y()+dy/2),1,xVHistoNodeItem::HNIM_VERTICAL);
+            _sectionLst.append(SECTION(iPnt.x(),false));
+        }
+    }
+    updatePath();
 }
 
 void xConnectorObj::generateShape()
@@ -356,6 +326,9 @@ void xConnectorObj::setParamSelected(bool b)
             pSelEffect->setEnabled(true);
             pSelectionTimer->start();
             connect(pSelectionTimer,SIGNAL(timeout()),paAnimation2,SLOT(start()));
+
+            for (int i=0;i<_nodeLst.count();++i) _nodeLst[i]->setVisible(true);
+            for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(false);
         }
         else
         {
@@ -365,6 +338,9 @@ void xConnectorObj::setParamSelected(bool b)
             pEffect->setBlurRadius(5);
             pEffect->setOffset(QPointF(3,3));
             if (pGrpItem) pGrpItem->setGraphicsEffect(pEffect);
+
+            for (int i=0;i<_nodeLst.count();++i) _nodeLst[i]->setVisible(false);
+            for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(true);
         }
     }
 }
@@ -380,7 +356,16 @@ xConnectorObj::~xConnectorObj()
 
 void xConnectorObj::update()
 {
-    createPath();
+    QPointF oPnt = pOutObj->pos();
+    QPointF iPnt; _paramConnection ? iPnt = pInObj->pos() : iPnt = pInObj->pos();
+    if (pInObj->type()==xCT_INPUT) iPnt-=QPointF(15,0);
+    else iPnt-=QPointF(0,18);
+
+    if (iPnt!=oldIPnt || oPnt!=oldOPnt) createPath();
+    else updatePath();
+
+    oldIPnt = iPnt;
+    oldOPnt = oPnt;
 
     for (int i=0;i<_arrowLst.count();++i)
         _arrowLst[i]->setVisible(_paramMp["show arrows"]._value.toBool());
@@ -388,6 +373,10 @@ void xConnectorObj::update()
 
 void xConnectorObj::save(QDataStream& d, bool _explicit)
 {
-    xAbstractBasisObj::save(d,_explicit);
-    d << _id << _paramConnection << pInObj->id() << pOutObj->id();
+    xVAbstractBaseObj::save(d,_explicit);
+    d << _id << _paramConnection;
+    d << (quint16) _sectionLst.count();
+    for (int i=0;i<_sectionLst.count();++i)
+        _sectionLst[i].save(d);
+    d << pInObj->id() << pOutObj->id();
 }

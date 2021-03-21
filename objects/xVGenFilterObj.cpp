@@ -40,6 +40,11 @@ xVGenFilterObj::xVGenFilterObj(QDataStream &d):xVObj_Basics(d)
     }
 }
 
+void xVGenFilterObj::run()
+{
+    xVObj_Basics::run();
+}
+
 void xVGenFilterObj::generateShape()
 {
     QPainterPath path;

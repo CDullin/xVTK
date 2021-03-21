@@ -18,6 +18,36 @@ xVEvalCondition::xVEvalCondition(const QString& s,QObject *parent) : QObject(par
     setString(s);
 }
 
+QString xVEvalCondition::translateToID(QString s) const
+{
+    for (int i=0;i<s.length();++i)
+    {
+        if (s[i]=="|")
+        {
+            int endpos = s.indexOf("}",i);
+            QString objPtr = s.mid(i+1,endpos-i-1);
+            xVObj_Basics* pVObj=(xVObj_Basics*)objPtr.toLongLong();
+            if (pVObj) s.replace(i+1,endpos-i-1,pVObj->id());
+        }
+    }
+    return s;
+}
+
+QString xVEvalCondition::translateFrmID(QString s) const
+{
+    for (int i=0;i<s.length();++i)
+    {
+        if (s[i]=="|")
+        {
+            int endpos = s.indexOf("}",i);
+            QString ID = s.mid(i+1,endpos-i-1);
+            s.replace(i+1,endpos-i-1,QString("%1").arg((quint64)objId2objPtr(ID)));
+        }
+    }
+    return s;
+}
+
+
 xVEvalCondition::xVEvalCondition(QDataStream &d) : QObject()
 {
     d >> _condition;
@@ -25,7 +55,7 @@ xVEvalCondition::xVEvalCondition(QDataStream &d) : QObject()
 
 void xVEvalCondition::save(QDataStream &d) const
 {
-    d << _condition;
+    d << translateToID(_condition);
 }
 
 QVariant xVEvalCondition::_neg(QVariant a)
@@ -395,6 +425,14 @@ void xVEvalCondition::update()
     // syntax is supposed to be {var|pObjPtr}.conditional
     // syntax is supposed to be {var|pObjPtr}.contains("name")
 
+    // check if a assignment is needed
+    QString assignVarBlk="";
+    if (_cpy.contains(":="))
+    {
+        assignVarBlk=_cpy.section(":=",0,0).simplified();
+        _cpy = _cpy.section(":=",1,1);
+    }
+
     bool _reCheck=true;
     while (_reCheck)
     {
@@ -562,5 +600,41 @@ void xVEvalCondition::update()
         }
     }
 
-    _result = calc_rec(_cpy).toBool();
+    _result = calc_rec(_cpy);
+
+    //assignment
+    if (!assignVarBlk.isEmpty())
+    {
+        assignVarBlk=assignVarBlk.mid(1,assignVarBlk.length()-2);
+        QString var=assignVarBlk.section("|",0,0);
+        QString objPtr=assignVarBlk.section("|",1,1);
+        xVObj_Basics* pVObj=(xVObj_Basics*)objPtr.toLongLong();
+        xPROP_TYPE prop;
+        if (pVObj && pVObj->paramMap() && (*pVObj->paramMap()).contains(var)) prop=(*pVObj->paramMap())[var];
+        else
+            if (_globalNameSpace.contains(var)) prop=_globalNameSpace[var];
+
+        switch (prop._value.type())
+        {
+        case QVariant::Bool: prop._value=_result.toBool();break;
+        case QVariant::LongLong:
+        case QVariant::ULongLong:
+        case QVariant::UInt:
+        case QVariant::Int: prop._value=_result.toLongLong();break;
+        case QMetaType::Float:
+        case QVariant::Double: prop._value=_result.toDouble();break;
+        case QVariant::String: prop._value=_result.toString();break;
+        case QVariant::UserType:
+            if (prop._value.userType()==QMetaType::type("xLimitedInt"))
+                prop._value=QVariant::fromValue(xLimitedInt(_result.toLongLong(),-32000,32000));
+            if (prop._value.userType()==QMetaType::type("xLimitedDouble"))
+                prop._value=QVariant::fromValue(xLimitedDouble(_result.toDouble(),-9E12,9E12,10));
+            break;
+        }
+
+        if (pVObj && pVObj->paramMap() && (*pVObj->paramMap()).contains(var)) (*pVObj->paramMap())[var]=prop;
+        else
+            if (_globalNameSpace.contains(var)) _globalNameSpace[var]=prop;
+
+    }
 }

@@ -9,13 +9,13 @@ xVIFObj::xVIFObj(const QString& txt):xVObj_Basics()
     _paramMp["condition"]._value = QVariant::fromValue(xVEvalCondition("0"));
     _paramMp["condition"]._id = 1;
     generateShape();
-    xConnector* pOutputCon=new xConnector(this);
-    _connectorLst.append(pOutputCon);
-    pOutputCon->setToOutput();
-    pOutputCon->item()->moveBy(52,22-9.5);
-    pGrpItem->addToGroup(pOutputCon->item());
-    connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
-    xConnector* pNoOutputCon=new xConnector(this);
+    pYesOutputCon=new xConnector(this);
+    _connectorLst.append(pYesOutputCon);
+    pYesOutputCon->setToOutput();
+    pYesOutputCon->item()->moveBy(52,22-9.5);
+    pGrpItem->addToGroup(pYesOutputCon->item());
+    connect(pYesOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
+    pNoOutputCon=new xConnector(this);
     _connectorLst.append(pNoOutputCon);
     pNoOutputCon->setToOutput();
     pNoOutputCon->item()->setRotation(90);
@@ -45,13 +45,33 @@ xVIFObj::xVIFObj(QDataStream& d):xVObj_Basics(d)
         pGrpItem->addToGroup(_connectorLst[i]->item());
         connect(_connectorLst[i],SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     }
+    pYesOutputCon=_connectorLst[0];
+    pNoOutputCon=_connectorLst[1];
+    pNoOutputCon->item()->setRotation(90);
+}
+
+void xVIFObj::reset()
+{
+    xVObj_Basics::reset();
+    pYesOutputCon->setEnabled(true);
+    pNoOutputCon->setEnabled(true);
+    setStatus(OS_UPDATE_NEEDED);
 }
 
 void xVIFObj::run()
 {
+    xVObj_Basics::run();
     setStatus(OS_RUNNING);
-
-    //flip output connection
+    if (_paramMp["condition"]._value.value<xVEvalCondition>().toBool())
+    {
+        pYesOutputCon->setEnabled(true);
+        pNoOutputCon->setEnabled(false);
+    }
+    else
+    {
+        pYesOutputCon->setEnabled(false);
+        pNoOutputCon->setEnabled(true);
+    }
     setStatus(OS_VALID);
 }
 
@@ -97,6 +117,7 @@ void xVIFObj::generateShape()
     pGrpItem->setBoundingRectSize(QRectF(-50,-18,120,70));
 
     pStatusItem->setPos(32,-5);
+    pStatusItem->hide();
     pGrpItem->addToGroup(pStatusItem);
 
     pGrpItem->setFlags(QGraphicsItem::ItemIsMovable);

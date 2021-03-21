@@ -2,6 +2,7 @@
 #define XVOBJECTTYPES_H
 
 #include "xVTypes.h"
+#include "xVAbstractBaseObj.h"
 #include "xVObjects.h"
 #include "xV2DVisObj.h"
 #include "xV3DVisObj.h"
@@ -22,5 +23,10 @@
 #include "xVTrafficLightObj.h"
 #include "xVMathObj.h"
 #include "xVStartObj.h"
+#include "xVEndObj.h"
+#include "xVWaitObj.h"
+#include "xVArduinoComObj.h"
+#include "xVArduinoConnectObj.h"
+#include "xVImportCVSObj.h"
 
 #endif // XVOBJECTTYPES_H

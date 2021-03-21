@@ -41,6 +41,11 @@ xVGenImpObj::xVGenImpObj(const QString& txt):xVObj_Basics()
     connect(pInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 }
 
+void xVGenImpObj::run()
+{
+    xVObj_Basics::run();
+}
+
 void xVGenImpObj::generateShape()
 {
     QPainterPath path;

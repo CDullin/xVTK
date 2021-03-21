@@ -6,12 +6,13 @@
 #include "xVObjects.h"
 #include "xVTypes.h"
 #include "xVObjectTypes.h"
+#include "xvEvalCondition.h"
 
 class xVEquationDlgItem : public QToolButton
 {
     Q_OBJECT
 public:
-    xVEquationDlgItem(xVObj_Basics* pRefObj,QWidget* parent=nullptr);
+    xVEquationDlgItem(xVEvalCondition pEP,xVObj_Basics* pRefObj,QWidget* parent=nullptr);
     QString equation();
 signals:
     void modified();

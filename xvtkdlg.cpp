@@ -36,6 +36,7 @@ xVTKDlg::xVTKDlg(QWidget *parent)
     //ui->toolBox->setCurrentIndex(0);
     xVGraphicsScene *pScene=new xVGraphicsScene();
     connect(pScene,SIGNAL(dblClicked()),this,SLOT(deselectAll()));
+    connect(pScene,SIGNAL(rDblClicked()),this,SLOT(rDblClickInScene()));
     ui->pDashBoardGV->setScene(pScene);
     ui->pDashBoardGV->scene()->setSceneRect(QRectF(0,0,ui->pDashBoardGV->width()-5,ui->pDashBoardGV->height()-5));
     ui->pDashBoardGV->setRenderHints(QPainter::Antialiasing|QPainter::TextAntialiasing|QPainter::HighQualityAntialiasing);
@@ -59,7 +60,8 @@ xVTKDlg::xVTKDlg(QWidget *parent)
     connect(ui->pClearTB,SIGNAL(clicked()),this,SLOT(clear()));
     connect(ui->pSaveTB,SIGNAL(clicked()),this,SLOT(save()));
     connect(ui->pLoadTB,SIGNAL(clicked()),this,SLOT(load()));
-    connect(ui->pVerifyTB,SIGNAL(clicked()),this,SLOT(verify()));
+    //connect(ui->pVerifyTB,SIGNAL(clicked()),this,SLOT(verify()));
+    connect(ui->pStepTB,SIGNAL(clicked()),this,SLOT(step()));
     connect(ui->pResetTB,SIGNAL(clicked()),this,SLOT(reset()));
     connect(ui->pRunTB,SIGNAL(clicked()),this,SLOT(run()));
     connect(this,SIGNAL(KSignal(const SIG_TYPE&,void *)),this,SLOT(KSlot(const SIG_TYPE&,void *)));
@@ -70,7 +72,7 @@ xVTKDlg::xVTKDlg(QWidget *parent)
 
     ui->pTabWdgt->setCurrentIndex(0);
     show();
-    ui->pPropGrpB->hide();
+    ui->pPropWdgt->hide();
     ui->pDashBoardGV->setGeometry(3,3,ui->pDataTab->width()-6,ui->pDataTab->height()-7);
     pVisMainWin->setGeometry(3,3,ui->pDataTab->width()-6,ui->pDataTab->height()-7);
 
@@ -88,6 +90,15 @@ xVTKDlg::xVTKDlg(QWidget *parent)
     dispMemoryConsumption();
 
     clear(false);
+}
+
+void xVTKDlg::rDblClickInScene()
+{
+    if (ui->pPropWdgt->activeObj() && ui->pPropWdgt->activeObj()->type()==xVOT_CONNECTOR)
+    {
+        xConnectorObj *pConObj = dynamic_cast<xConnectorObj*>(ui->pPropWdgt->activeObj());
+        pConObj->addNodeAtCursorPos();
+    }
 }
 
 void xVTKDlg::dispMemoryConsumption()
@@ -120,8 +131,9 @@ void xVTKDlg::dispMemoryConsumption()
 void xVTKDlg::generateHooks()
 {
     QList <HOOK> _hookLst;
-    _hookLst.append(HOOK("objects","volume",ST_CREATE_OBJ_HOOK,xVOT_VOLUME));
-    _hookLst.append(HOOK("objects","mesh",ST_CREATE_OBJ_HOOK,xVOT_MESH));
+    _hookLst.append(HOOK("import","volume",ST_CREATE_OBJ_HOOK,xVOT_VOLUME));
+    _hookLst.append(HOOK("import","mesh",ST_CREATE_OBJ_HOOK,xVOT_MESH));
+    _hookLst.append(HOOK("import","cvs",ST_CREATE_OBJ_HOOK,xVOT_CVS));
     _hookLst.append(HOOK("user interaction","parameter input",ST_CREATE_OBJ_HOOK,xVOT_USER_TABLE_DLG));
     _hookLst.append(HOOK("properties","volume",ST_CREATE_OBJ_HOOK,xVOT_VOLUME_VIS_PROP));
     _hookLst.append(HOOK("properties","mesh",ST_CREATE_OBJ_HOOK,xVOT_MESH_VIS_PROP));
@@ -132,10 +144,13 @@ void xVTKDlg::generateHooks()
     _hookLst.append(HOOK("views","2D",ST_CREATE_OBJ_HOOK,xVOT_2D_VIEW));
     _hookLst.append(HOOK("views","3D",ST_CREATE_OBJ_HOOK,xVOT_3D_VIEW));
     _hookLst.append(HOOK("tools","call external",ST_CREATE_OBJ_HOOK,xVOT_CALL_EXTERNAL));    
-    _hookLst.append(HOOK("logic","variable definition",ST_CREATE_OBJ_HOOK,xVOT_VAR_DEFINITION));
-    _hookLst.append(HOOK("logic","3 state result",ST_CREATE_OBJ_HOOK,xVOT_TRAFFIC_LIGHT));
+    _hookLst.append(HOOK("logic","definition",ST_CREATE_OBJ_HOOK,xVOT_VAR_DEFINITION));
+    _hookLst.append(HOOK("logic","3 state",ST_CREATE_OBJ_HOOK,xVOT_TRAFFIC_LIGHT));
     _hookLst.append(HOOK("logic","if",ST_CREATE_OBJ_HOOK,xVOT_IF));
-    _hookLst.append(HOOK("logic","mathematical equation",ST_CREATE_OBJ_HOOK,xVOT_MATH));
+    _hookLst.append(HOOK("logic","equation",ST_CREATE_OBJ_HOOK,xVOT_MATH));
+    _hookLst.append(HOOK("logic","wait",ST_CREATE_OBJ_HOOK,xVOT_WAIT));
+    _hookLst.append(HOOK("arduino","connect",ST_CREATE_OBJ_HOOK,xVOT_ARDUINO_CONNECT));
+    _hookLst.append(HOOK("arduino","communication",ST_CREATE_OBJ_HOOK,xVOT_ARDUINO_COM));
     _hookLst.append(HOOK("filter","filter",ST_CREATE_OBJ_HOOK,xVOT_FILTER));
 
     emit KSignal(ST_ADD_ACTION_HOOKS,&_hookLst);
@@ -164,7 +179,7 @@ bool xVTKDlg::eventFilter(QObject *obj, QEvent *event)
 void xVTKDlg::activateNext()
 {
     if (_objLst.count()==0) return;
-    xAbstractBasisObj *pBaseObj = ui->pPropWdgt->activeObj();
+    xVAbstractBaseObj *pBaseObj = ui->pPropWdgt->activeObj();
     if (pBaseObj)
     {
         int i=_objLst.indexOf(pBaseObj);
@@ -181,7 +196,7 @@ void xVTKDlg::clear(bool verbose)
         reset(false);
         if (_objLst.count()>0)
         {
-            xAbstractBasisObj* pItem=_objLst.first();
+            xVAbstractBaseObj* pItem=_objLst.first();
             while (pItem && _objLst.count()>0)
             {
                 _objLst.removeOne(pItem);
@@ -192,6 +207,13 @@ void xVTKDlg::clear(bool verbose)
         xVObj_Basics *pVObj = new xVStartObj("#start");
         ui->pDashBoardGV->scene()->addItem(pVObj->item());
         emit KSignal(ST_ADD_OBJECT,pVObj);
+        pVObj->item()->setPos(30,30);
+        snapToGrid(pVObj);
+        pVObj = new xVEndObj("#end");
+        ui->pDashBoardGV->scene()->addItem(pVObj->item());
+        emit KSignal(ST_ADD_OBJECT,pVObj);
+        pVObj->item()->setPos(ui->pDashBoardGV->scene()->width()-100,ui->pDashBoardGV->scene()->height()-50);
+        snapToGrid(pVObj);
     }
 }
 void xVTKDlg::verify()
@@ -208,7 +230,7 @@ void xVTKDlg::placeObjInScene(xVObj_Basics* pObj)
 
     while (!_placed) {
         _placed=true;
-        for (QList <xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+        for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
         {
             xVObj_Basics* pCurObj = dynamic_cast<xVObj_Basics*>(*it);
             if (pCurObj && pCurObj!=pObj)
@@ -241,7 +263,7 @@ QString xVTKDlg::uniqueName(QString s)
     do
     {
         _found = false;
-        for (QList <xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+        for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
         {
             xVObj_Basics* pVObj = dynamic_cast<xVObj_Basics*>(*it);
             if (pVObj && pVObj->paramMap()->contains("name") && (*pVObj->paramMap())["name"]._value.toString()==res)
@@ -263,6 +285,11 @@ void xVTKDlg::KSlot(const SIG_TYPE& type,void *pData)
         xVObj_Basics *pVObj=nullptr;
         switch (*pOType)
         {
+        case xVOT_CVS:                  pVObj = new xVImportCVSObj(uniqueName("-> *.cvs"));                             break;
+        case xVOT_ARDUINO_COM:          pVObj = new xVArduinoComObj(uniqueName("#arduino <->"));                        break;
+        case xVOT_ARDUINO_CONNECT:      pVObj = new xVArduinoConnectObj(uniqueName("#arduino"));                        break;
+        case xVOT_WAIT:                 pVObj = new xVWaitObj(uniqueName("#wait"));                                     break;
+        case xVOT_END:                  pVObj = new xVEndObj("#end");                                                   break;
         case xVOT_START:                pVObj = new xVStartObj("#start");                                               break;
         case xVOT_VOLUME:               pVObj = new xVVolObj(uniqueName("#volume"));                                    break;
         case xVOT_MESH:                 pVObj = new xVPolyObj(uniqueName("#mesh"));                                     break;
@@ -276,7 +303,7 @@ void xVTKDlg::KSlot(const SIG_TYPE& type,void *pData)
         case xVOT_USER_TABLE_DLG:       pVObj = new xVUserTableImportDlgObj(uniqueName("#user"));                       break;
         case xVOT_VAR_DEFINITION:       pVObj = new xVVarDefinitionObj(uniqueName("#define"));                          break;
         case xVOT_TRAFFIC_LIGHT:        pVObj = new xVTrafficLightObj(uniqueName("#light"));                            break;
-        case xVOT_MATH:                 pVObj = new xVMathObj(uniqueName("#Eq."));                            break;
+        case xVOT_MATH:                 pVObj = new xVMathObj(uniqueName("#Eq."));                                      break;
         default:
             emit KSignal(ST_ERROR_MSG,new QString("unsupported object type for creating hook detected"));
             break;
@@ -365,26 +392,26 @@ void xVTKDlg::KSlot(const SIG_TYPE& type,void *pData)
     }
         break;
 
-    case ST_ADD_OBJECT: _objLst.append((xAbstractBasisObj*)pData);
-        connect((xAbstractBasisObj*)pData,SIGNAL(selected(xAbstractBasisObj*)),ui->pPropWdgt,SLOT(objSelected(xAbstractBasisObj*)));
-        connect((xAbstractBasisObj*)pData,SIGNAL(parameterModified()),ui->pPropWdgt,SLOT(parameterModified()));
-        connect((xAbstractBasisObj*)pData,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SLOT(KSlot(const SIG_TYPE&,void*)));
-        if (dynamic_cast<xVObj_Basics*>((xAbstractBasisObj*)pData))
+    case ST_ADD_OBJECT: _objLst.append((xVAbstractBaseObj*)pData);
+        connect((xVAbstractBaseObj*)pData,SIGNAL(selected(xVAbstractBaseObj*)),ui->pPropWdgt,SLOT(objSelected(xVAbstractBaseObj*)));
+        connect((xVAbstractBaseObj*)pData,SIGNAL(parameterModified()),ui->pPropWdgt,SLOT(parameterModified()));
+        connect((xVAbstractBaseObj*)pData,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SLOT(KSlot(const SIG_TYPE&,void*)));
+        if (dynamic_cast<xVObj_Basics*>((xVAbstractBaseObj*)pData))
         {
-            dynamic_cast<xVObj_Basics*>((xAbstractBasisObj*)pData)->item()->setPos(50,50);
-            connect(dynamic_cast<xVObj_Basics*>((xAbstractBasisObj*)pData),SIGNAL(placed()),this,SLOT(snapToGrid()));
-            connect(dynamic_cast<xVObj_Basics*>((xAbstractBasisObj*)pData),SIGNAL(connectorActivated(xVObj_Basics*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated(xVObj_Basics*,xCONNECTOR_TYPE)));
+            dynamic_cast<xVObj_Basics*>((xVAbstractBaseObj*)pData)->item()->setPos(50,50);
+            connect(dynamic_cast<xVObj_Basics*>((xVAbstractBaseObj*)pData),SIGNAL(placed()),this,SLOT(snapToGrid()));
+            connect(dynamic_cast<xVObj_Basics*>((xVAbstractBaseObj*)pData),SIGNAL(connectorActivated(xVObj_Basics*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated(xVObj_Basics*,xCONNECTOR_TYPE)));
         }
-        placeObjInScene(dynamic_cast<xVObj_Basics*>((xAbstractBasisObj*)pData));
+        placeObjInScene(dynamic_cast<xVObj_Basics*>((xVAbstractBaseObj*)pData));
         emit KSignal(ST_OBJECT_ADDED,pData);
         break;
     case ST_REMOVE_OBJECT: removeObject((xVObj_Basics*)pData);break;
     }
 }
 
-void xVTKDlg::removeObject(xAbstractBasisObj* pObj)
+void xVTKDlg::removeObject(xVAbstractBaseObj* pObj)
 {
-    QList <xAbstractBasisObj*> killLst;
+    QList <xVAbstractBaseObj*> killLst;
     killLst.append(pObj);
     xVObj_Basics *pBaseObj = dynamic_cast<xVObj_Basics*>(pObj);
     xConnectorObj *pConBaseObj = dynamic_cast<xConnectorObj*>(pObj);
@@ -397,7 +424,7 @@ void xVTKDlg::removeObject(xAbstractBasisObj* pObj)
     }
     if (pBaseObj)
     {
-        for (QList <xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+        for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
         {
             xConnectorObj *pCurrentConnectorObj = dynamic_cast<xConnectorObj*>((*it));
             if (pCurrentConnectorObj && (pCurrentConnectorObj->inputObj()->baseObj()==pBaseObj || pCurrentConnectorObj->outputObj()->baseObj()==pBaseObj))
@@ -410,7 +437,7 @@ void xVTKDlg::removeObject(xAbstractBasisObj* pObj)
         }
     }
 
-    for (QList <xAbstractBasisObj*>::iterator it=killLst.begin();it!=killLst.end();++it)
+    for (QList <xVAbstractBaseObj*>::iterator it=killLst.begin();it!=killLst.end();++it)
     {
         _objLst.removeOne((*it));
         emit KSignal(ST_OBJECT_REMOVED,*it);
@@ -436,7 +463,7 @@ void xVTKDlg::reject()
 
 void xVTKDlg::deselectAll()
 {
-    for (QList <xAbstractBasisObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
         if ((*it)->isParamSelected()) {
             ui->pPropWdgt->objSelected(*it);
         }
@@ -499,12 +526,6 @@ void xVTKDlg::addVisWidget(QWidget* wdgt)
 
 xVObj_Basics* xVTKDlg::baseObjFromId(const QString& id)
 {
-    xVObj_Basics* pObj=nullptr;
-    for ( QList <xAbstractBasisObj*>::iterator it=_objLst.begin(); it!=_objLst.end(); ++it) {
-        xVObj_Basics* pCurrentVObj=dynamic_cast<xVObj_Basics* >(*it);
-        if (pCurrentVObj && pCurrentVObj->id()==id)
-            pObj=pCurrentVObj;
-    }
-    return pObj;
+    return dynamic_cast<xVObj_Basics* >(objId2objPtr(id));
 }
 

@@ -37,6 +37,8 @@ xV3DVisObj::xV3DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["use shadows"]._value = true;
     _paramMp["hidden line removal"]._id = 10;
     _paramMp["hidden line removal"]._value = true;
+    _paramMp["orientation marker"]._id=11;
+    _paramMp["orientation marker"]._value = true;
 }
 
 xV3DVisObj::xV3DVisObj(QDataStream &d):xVGenVisObj(d)
@@ -47,6 +49,9 @@ xV3DVisObj::xV3DVisObj(QDataStream &d):xVGenVisObj(d)
 
 void xV3DVisObj::run()
 {
+    xVGenVisObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
+
     setStatus(OS_RUNNING);
     if (pRenderWdgt==nullptr)
     {
@@ -58,6 +63,7 @@ void xV3DVisObj::run()
         pRenderer->SetUseDepthPeeling(false);
         pRenderer->SetUseDepthPeelingForVolumes(false);
         pRenderer->SetUseHiddenLineRemoval(true);
+        pRenderWdgt->GetRenderWindow()->SetLineSmoothing(1);
     }
 
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
@@ -78,6 +84,15 @@ void xV3DVisObj::run()
                 }
             }
         }
+
+        pOrientationMaker = vtkOrientationMarkerWidget::New();
+        pOrientationMaker->SetInteractor(pRenderWdgt->GetInteractor());
+        pOrientationMaker->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+        pAxes = vtkAxesActor::New();
+        pOrientationMaker->SetOrientationMarker(pAxes);
+        pOrientationMaker->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+        pOrientationMaker->SetEnabled( 1 );
+        pOrientationMaker->InteractiveOn();
     }
 
     paramModified("");
@@ -124,6 +139,9 @@ void xV3DVisObj::paramModified(const QString &txt)
 
     QDockWidget* pDWdgt = dynamic_cast <QDockWidget*>(pRenderWdgt->parentWidget());
     if (pDWdgt) pDWdgt->setProperty("windowTitle",_paramMp["name"]._value);
+
+    //widget->SetInteractor( renderWindowInteractor );
+    pOrientationMaker->SetEnabled( _paramMp["orientation marker"]._value.toBool() );
 
     pRenderWdgt->update();
 }

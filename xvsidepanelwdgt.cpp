@@ -14,6 +14,7 @@ xVSidePanelWdgt::xVSidePanelWdgt(QWidget *parent) : QWidget(parent)
     pBoxLayout->addWidget(new QLabel("objects"));
     pTreeWdgt = new xVCreateObjTreeWdgt(this);
     pTreeWdgt->header()->setVisible(false);
+    pTreeWdgt->setRootIsDecorated(false);
     pBoxLayout->addWidget(pTreeWdgt);
 }
 

@@ -9,6 +9,9 @@
 #include "vtkImageMapper3D.h"
 #include "vtkVolumeProperty.h"
 
+#include <stdlib.h>
+using namespace std;
+
 xV2DVisObj::xV2DVisObj(const QString& txt):xVGenVisObj(txt)
 {
     _type = xVOT_2D_VIEW;
@@ -61,6 +64,9 @@ void xV2DVisObj::reset()
 
 void xV2DVisObj::run()
 {
+    xVGenVisObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
+
     setStatus(OS_RUNNING);
     if (pRenderWdgt==nullptr)
     {
@@ -75,6 +81,8 @@ void xV2DVisObj::run()
     }
 
     vtkVolume *pVtkVol=nullptr;
+    x3D_SAMPLE_POS dimension(1,1,1);
+
     // connect to data
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
     {
@@ -86,10 +94,9 @@ void xV2DVisObj::run()
                 // find all vis property objects
                 xVGenVisPropObj *pIObj = dynamic_cast<xVGenVisPropObj*>(*it);
                 if (pIObj && pIObj->outputParamMap()->contains("volume"))
-                {
                     pVtkVol=(*pIObj->outputParamMap())["volume"]._value.value<vtkVolumePtr>();
-                    //pRenderer->AddVolume(pVtkVol);
-                }
+                if (pIObj && pIObj->outputParamMap()->contains("dimension"))
+                    dimension=(*pIObj->outputParamMap())["dimension"]._value.value<x3D_SAMPLE_POS>();
             }
         }
     }
@@ -130,19 +137,30 @@ void xV2DVisObj::run()
         {
         case 0 : // xy
             pSliceOrientation->DeepCopy(axialElements);
+            // set limits for slider
+            _paramMp["frame position"]._value=QVariant::fromValue(xLimitedInt(max((quint32)0,min(dimension.z,(quint32)_paramMp["frame position"]._value.value<xLimitedInt>()._value)),0,dimension.z));
             break;
         case 1 : // xz
             pSliceOrientation->DeepCopy(coronalElements);
+            _paramMp["frame position"]._value=QVariant::fromValue(xLimitedInt(max((quint32)0,min(dimension.y,(quint32)_paramMp["frame position"]._value.value<xLimitedInt>()._value)),0,dimension.y));
             break;
         case 2 : // yz
             pSliceOrientation->DeepCopy(sagittalElements);
+            _paramMp["frame position"]._value=QVariant::fromValue(xLimitedInt(max((quint32)0,min(dimension.x,(quint32)_paramMp["frame position"]._value.value<xLimitedInt>()._value)),0,dimension.x));
             break;
         case 3 : // free ()
             break;
         }
+
+        // center or slice?
+        /*
         pSliceOrientation->SetElement(0,3,center[0]);
         pSliceOrientation->SetElement(1,3,center[1]);
         pSliceOrientation->SetElement(2,3,center[2]);
+        */
+        pSliceOrientation->SetElement(0,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
+        pSliceOrientation->SetElement(1,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
+        pSliceOrientation->SetElement(2,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
 
         pSlicer = vtkImageReslice::New();
         pSlicer->SetInputData(pVtkVol->GetMapper()->GetDataSetInput());
@@ -196,6 +214,7 @@ void xV2DVisObj::paramModified(const QString& txt)
     if (!pRenderWdgt) return;
     vtkVolume *pVtkVol=nullptr;
     // connect to data
+    x3D_SAMPLE_POS dimension(1,1,1);
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
     {
         // find all connected and enabled inputs
@@ -208,7 +227,7 @@ void xV2DVisObj::paramModified(const QString& txt)
                 if (pIObj && pIObj->outputParamMap()->contains("volume"))
                 {
                     pVtkVol=(*pIObj->outputParamMap())["volume"]._value.value<vtkVolumePtr>();
-                    //pRenderer->AddVolume(pVtkVol);
+                    dimension=(*pIObj->outputParamMap())["dimension"]._value.value<x3D_SAMPLE_POS>();
                 }
             }
         }
@@ -220,6 +239,7 @@ void xV2DVisObj::paramModified(const QString& txt)
     vtkColorTransferFunctionPtr pColorFunc=volumeProperty->GetRGBTransferFunction();
     if (!pColorFunc) return;
     // get center
+
     double center[3];
     center[0] = _paramMp["center"]._value.value<QVector3D>().x();
     center[1] = _paramMp["center"]._value.value<QVector3D>().y();
@@ -232,33 +252,33 @@ void xV2DVisObj::paramModified(const QString& txt)
              0, 0, 0, 1 };
     static double coronalElements[16] = {
              1, 0, 0, 0,
-             0, 0, 1, 0,
-             0,-1, 0, 0,
+             0, 0, -1, 0,
+             0,1, 0, 0,
              0, 0, 0, 1 };
 
     static double sagittalElements[16] = {
-            0, 0, -1, 0,
+            0, 0, 1, 0,
             1, 0, 0, 0,
-            0, -1, 0, 0,
+            0, 1, 0, 0,
             0, 0, 0, 1};
 
     switch (::_optionLsts["2dview orientation"].indexOf(_paramMp["2dview orientation"]._value.toString()))
     {
     case 0 : // xy
         pSliceOrientation->DeepCopy(axialElements);
+        pSliceOrientation->SetElement(2,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
         break;
     case 1 : // xz
         pSliceOrientation->DeepCopy(coronalElements);
+        pSliceOrientation->SetElement(1,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
         break;
     case 2 : // yz
         pSliceOrientation->DeepCopy(sagittalElements);
+        pSliceOrientation->SetElement(0,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
         break;
     case 3 : // free ()
         break;
     }
-    pSliceOrientation->SetElement(0,3,center[0]);
-    pSliceOrientation->SetElement(1,3,center[1]);
-    pSliceOrientation->SetElement(2,3,center[2]);
 
     QColor c1=_paramMp["background color1"]._value.value<QColor>();
     pRenderer->SetBackground(c1.redF(),c1.greenF(),c1.blueF());

@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItemGroup>
+#include <QGraphicsSceneMouseEvent>
 #include <QPen>
 
 class xEllipseItem:public QObject,public QGraphicsEllipseItem
@@ -48,7 +49,8 @@ protected:
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override
     {
         QGraphicsItemGroup::mouseMoveEvent(mouseEvent);
-        emit moved();
+        if (mouseEvent->pos()!=mouseEvent->lastPos())
+            emit moved();
     }
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override
     {

@@ -6,6 +6,7 @@
 #include "xVCustomGraphicItems.h"
 #include "xVConnector.h"
 #include "xVTypes.h"
+#include "xVAbstractBaseObj.h"
 #include <QGraphicsColorizeEffect>
 #include <QPropertyAnimation>
 #include <QTimer>
@@ -19,7 +20,11 @@ enum OBJ_STATUS
     OS_UPDATE_NEEDED
 };
 
-class xVObj_Basics:public xAbstractBasisObj
+//!
+//! \brief The xVObj_Basics class
+//! is the base clase for all objects in the dashboard
+//!
+class xVObj_Basics:public xVAbstractBaseObj
 {
 Q_OBJECT
 public:
@@ -42,7 +47,7 @@ public:
     virtual void setParamSelected(bool b) override;
     OBJ_STATUS status(){return _status;}
     void setStatus(const OBJ_STATUS& s);
-    virtual void run(){setStatus(OS_VALID);};
+    virtual void run();
     void positionChanged(){emit moved();}
     virtual void save(QDataStream&,bool _explicit=false) override;
     virtual void reset(){setStatus(OS_UPDATE_NEEDED);};

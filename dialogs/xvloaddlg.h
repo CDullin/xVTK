@@ -20,6 +20,7 @@ public:
 protected slots:
     void browseFolder(const QString& path="");
     void itemActivated(QListWidgetItem *pItem);
+    void loadItem(QListWidgetItem *pItem);
 
 private:
     Ui::xVLoadDlg *ui;

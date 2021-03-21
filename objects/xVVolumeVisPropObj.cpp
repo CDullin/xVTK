@@ -52,6 +52,8 @@ void xVVolumeVisPropObj::reset()
 
 void xVVolumeVisPropObj::run()
 {
+    xVGenVisPropObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
     setStatus(OS_RUNNING);
     /*
     vtkImageReader *pDataImporter = nullptr;
@@ -116,6 +118,13 @@ void xVVolumeVisPropObj::run()
         }
         _outputParamMp["volume"]._value = QVariant::fromValue(volume);
         _outputParamMp["volume"]._id=0;
+        if (pRefVolObj)
+        {
+            _outputParamMp["dimension"]._value=(*pRefVolObj->paramMap())["dimension"]._value;
+            _outputParamMp["dimension"]._id=1;
+            _outputParamMp["resolution"]._id=2;
+            _outputParamMp["resolution"]._value=(*pRefVolObj->paramMap())["resolution"]._value;
+        }
         setStatus(OS_VALID);
 
         paramModified("");
@@ -127,9 +136,6 @@ void xVVolumeVisPropObj::paramModified(const QString& txt)
     xVGenVisPropObj::paramModified(txt);
     if (!volume) return;
 
-    //***
-    // check if opacity and lut needs to be optimzed or generated
-    //***
 
     volumeProperty->SetInterpolationTypeToLinear();
     volumeProperty->SetAmbient(_paramMp["ambient light power"]._value.toDouble());

@@ -16,6 +16,7 @@ xVLoadDlg::xVLoadDlg(QWidget *parent) :
     ui->setupUi(this);
     connect(ui->pBrowseTB,SIGNAL(clicked()),this,SLOT(browseFolder()));
     connect(ui->listWidget,SIGNAL(itemClicked(QListWidgetItem *)),this,SLOT(itemActivated(QListWidgetItem *)));
+    connect(ui->listWidget,SIGNAL(itemDoubleClicked(QListWidgetItem *)),this,SLOT(loadItem(QListWidgetItem *)));
 
     if (::_settings.contains("export dashboard path")) browseFolder(::_settings["export dashboard path"]._value.toString());
 }
@@ -95,6 +96,12 @@ void xVLoadDlg::itemActivated(QListWidgetItem *pItem)
             f.close();
         }
     }
+}
+
+void xVLoadDlg::loadItem(QListWidgetItem *pItem)
+{
+    itemActivated(pItem);
+    accept();
 }
 
 xVLoadDlg::~xVLoadDlg()

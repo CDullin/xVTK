@@ -24,10 +24,14 @@ SOURCES += \
     main.cpp \
     objects/xV2DVisObj.cpp \
     objects/xV3DVisObj.cpp \
+    objects/xVAbstractBaseObj.cpp \
+    objects/xVArduinoComObj.cpp \
+    objects/xVArduinoConnectObj.cpp \
     objects/xVCallExternalObj.cpp \
     objects/xVConnector.cpp \
     objects/xVConnectorObj.cpp \
     objects/xVCustomGraphicItems.cpp \
+    objects/xVEndObj.cpp \
     objects/xVGenFilterObj.cpp \
     objects/xVGenImpObj.cpp \
     objects/xVGenUserDlgObj.cpp \
@@ -35,6 +39,7 @@ SOURCES += \
     objects/xVGenVisPropObj.cpp \
     objects/xVHisto.cpp \
     objects/xVIFObj.cpp \
+    objects/xVImportCVSObj.cpp \
     objects/xVMathObj.cpp \
     objects/xVMeshVisPropObj.cpp \
     objects/xVObjects.cpp \
@@ -45,9 +50,11 @@ SOURCES += \
     objects/xVVarDefinitionObj.cpp \
     objects/xVVolObj.cpp \
     objects/xVVolumeVisPropObj.cpp \
+    objects/xVWaitObj.cpp \
     objects/xvcreateobjtreewdgt.cpp \
     objects/xvusertableruntimedlg.cpp \
     settings/xVBoolDlgItem.cpp \
+    settings/xVCVSImportPreviewDlg.cpp \
     settings/xVColorDlgItem.cpp \
     settings/xVDoubleValueDlgItem.cpp \
     settings/xVEquationDlgItem.cpp \
@@ -64,6 +71,7 @@ SOURCES += \
     settings/xvpropwdgt.cpp \
     settings/xvsettingswdgt.cpp \
     settings/xvusertabledefinitiondlg.cpp \
+    tools/xVTable.cpp \
     tools/xVTypes.cpp \
     tools/xvEvalCondition.cpp \
     tools/xviconfactory.cpp \
@@ -87,10 +95,14 @@ HEADERS += \
     histogram/xvhistodlg.h \
     objects/xV2DVisObj.h \
     objects/xV3DVisObj.h \
+    objects/xVAbstractBaseObj.h \
+    objects/xVArduinoComObj.h \
+    objects/xVArduinoConnectObj.h \
     objects/xVCallExternalObj.h \
     objects/xVConnector.h \
     objects/xVConnectorObj.h \
     objects/xVCustomGraphicItems.h \
+    objects/xVEndObj.h \
     objects/xVGenFilterObj.h \
     objects/xVGenImpObj.h \
     objects/xVGenUserDlgObj.h \
@@ -98,6 +110,7 @@ HEADERS += \
     objects/xVGenVisPropObj.h \
     objects/xVHisto.h \
     objects/xVIFObj.h \
+    objects/xVImportCVSObj.h \
     objects/xVMathObj.h \
     objects/xVMeshVisPropObj.h \
     objects/xVObjectTypes.h \
@@ -109,9 +122,11 @@ HEADERS += \
     objects/xVVarDefinitionObj.h \
     objects/xVVolObj.h \
     objects/xVVolumeVisPropObj.h \
+    objects/xVWaitObj.h \
     objects/xvcreateobjtreewdgt.h \
     objects/xvusertableruntimedlg.h \
     settings/xVBoolDlgItem.h \
+    settings/xVCVSImportPreviewDlg.h \
     settings/xVColorDlgItem.h \
     settings/xVCustomTableItems.h \
     settings/xVDoubleValueDlgItem.h \
@@ -129,6 +144,7 @@ HEADERS += \
     settings/xvpropwdgt.h \
     settings/xvsettingswdgt.h \
     settings/xvusertabledefinitiondlg.h \
+    tools/xVTable.h \
     tools/xVTypes.h \
     tools/xvEvalCondition.h \
     tools/xviconfactory.h \
@@ -140,6 +156,7 @@ FORMS += \
     dialogs/xvloaddlg.ui \
     dialogs/xvsavedlg.ui \
     objects/xvusertableruntimedlg.ui \
+    settings/xVCVSImportPreviewDlg.ui \
     settings/xrcolorpickdlg.ui \
     settings/xvequationdesigndlg.ui \
     settings/xvpropwdgt.ui \
@@ -245,6 +262,18 @@ win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/release/
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/debug/ -lvtkImagingCore-8.0
 else:unix: LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkImagingCore-8.0
 
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/release/ -lvtkFiltersGeneral-8.0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/debug/ -lvtkFiltersGeneral-8.0
+else:unix: LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkFiltersGeneral-8.0
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/release/ -lvtkRenderingAnnotation-8.0
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/debug/ -lvtkRenderingAnnotation-8.0
+else:unix: LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkRenderingAnnotation-8.0
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/release/ -lvtkInteractionWidgets-8.0.so
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../VTK8-build/lib/debug/ -lvtkInteractionWidgets-8.0
+else:unix: LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkInteractionWidgets-8.0
+
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/DataModel
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/ExecutionModel
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common
@@ -256,12 +285,14 @@ INCLUDEPATH += $$PWD/../VTK-8.0.1_source
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Filters
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Filters/Sources
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Filters/Core
+INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Filters/General
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/OpenGL2
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/Core
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/Volume
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/VolumeOpenGL2
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/LOD
+INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Rendering/Annotation
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Utilities/KWIML
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Utilities/KWSys
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/IO
@@ -277,6 +308,7 @@ INCLUDEPATH += $$PWD/../VTK-8.0.1_source/GUISupport/QtOpenGL
 INCLUDEPATH += $$PWD/../VTK8-build/GUISupport/QtOpenGL
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction/Image
+INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction/Widgets
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Imaging/Core
 
 
