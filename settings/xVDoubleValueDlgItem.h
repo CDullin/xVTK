@@ -21,7 +21,7 @@ signals:
     void modified();
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 protected:
-    virtual void resizeEvent(QResizeEvent *event) override;
+    //virtual void resizeEvent(QResizeEvent *event) override;
     double _lowLimit,_highLimit,_value,_sliderReduction;
     QDoubleSpinBox *pSB=nullptr;
     QSlider *pSlider=nullptr;

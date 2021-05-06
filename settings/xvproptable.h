@@ -19,6 +19,9 @@ public:
     void setObjectColumnStaysHidden(bool b){_objectColumnStaysHidden=b;}
     xParamMap* paramMap(){return pParamMpRef;}
 
+public slots:
+    void KSlot(const SIG_TYPE& t,void *pData=nullptr);
+
 signals:
     void KSignal(const SIG_TYPE& t,void *pData);
     void paramModified(const QString&);
@@ -30,7 +33,7 @@ protected slots:
 
 protected:
     void updateRowVisibility();
-
+    void updateLimits();
 
     QMap<QString,xPROP_TYPE>* pParamMpRef = nullptr;
     xVAbstractBaseObj *pCurrentObj=nullptr;

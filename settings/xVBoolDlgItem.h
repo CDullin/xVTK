@@ -16,7 +16,7 @@ signals:
     void modified();
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 protected:
-    virtual void resizeEvent(QResizeEvent *event) override;
+    //virtual void resizeEvent(QResizeEvent *event) override;
     QRadioButton *pRBtn0,*pRBtn1;
 };
 

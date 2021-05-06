@@ -6,10 +6,74 @@
 #include "xVEquationDlgItem.h"
 #include <QComboBox>
 #include <QApplication>
+#include <QHeaderView>
 
 xVPropTable::xVPropTable(QWidget* parent):QTableWidget(parent)
 {
     connect(this,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(itemChanged_SLOT(QTableWidgetItem *)));
+}
+
+
+void xVPropTable::KSlot(const SIG_TYPE& type,void *pData)
+{
+    switch (type)
+    {
+    case ST_PARAMETER_LIMITS_CHANGED:
+        if (pCurrentObj && pCurrentObj==(xVAbstractBaseObj*)pData)
+        {
+            updateRowVisibility();
+            updateLimits();
+        }
+        break;
+    default:
+        //handled
+        break;
+    }
+}
+
+void xVPropTable::updateLimits()
+{
+    for (int r=0;r<rowCount();++r)
+    {
+        QString key=item(r,0)->text();
+        if (pCurrentObj->paramMap()->contains(key))
+        {
+            QVariant var = (*pCurrentObj->paramMap())["key"]._value;
+            bool _enabled = (*pCurrentObj->paramMap())["key"]._enabled;
+
+            if (var.userType()==QMetaType::type("xLimitedInt"))
+            {
+                xVIntValueDlgItem* pItem = (xVIntValueDlgItem*)item(r,1);
+                pItem->setRange(var.value<xLimitedInt>()._lowerLimit,var.value<xLimitedInt>()._upperLimit);
+            }
+            if (var.userType()==QMetaType::type("xLimitedDouble"))
+            {
+                xVDoubleValueDlgItem* pItem = (xVDoubleValueDlgItem*)item(r,1);
+                pItem->setRange(var.value<xLimitedDouble>()._lowerLimit,var.value<xLimitedDouble>()._upperLimit);
+            }
+
+            if (!_enabled)
+            {
+                if (item(r,0))
+                {
+                    item(r,0)->setFlags(Qt::NoItemFlags);
+                    item(r,0)->setIcon(QIcon(QPixmap("://images/lock_closed.png")));
+                }
+                if (item(r,1)) item(r,1)->setFlags(Qt::NoItemFlags);
+            }
+            else
+            {
+                if (item(r,0))
+                {
+                    item(r,0)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEnabled);
+                    item(r,0)->setIcon(QIcon(QPixmap("://images/lock_open.png")));
+                }
+                if (item(r,1)) item(r,1)->setFlags(Qt::ItemIsSelectable|Qt::ItemIsEditable|Qt::ItemIsEnabled);
+            }
+            QWidget *pWdgt = dynamic_cast<QWidget*>(cellWidget(r,1));
+            if (pWdgt) pWdgt->setEnabled(_enabled);
+        }
+    }
 }
 
 bool xVPropTable::keyExists(const QString& txt)
@@ -101,7 +165,7 @@ void xVPropTable::customItemChanged()
                 break;
             case QVariant::UserType:
             {
-                if (var.userType()==QMetaType::type("QFileInfo"))
+                if (var.userType()==QMetaType::type("xFileName"))
                 {
                     xVFileImportDlgItem* pItem = dynamic_cast<xVFileImportDlgItem*>(wdgt);
                     if (pItem)
@@ -146,16 +210,28 @@ void xVPropTable::customItemChanged()
                 if (var.userType()==QMetaType::type(("xParamMap")))
                 {
                     xVUserTableDefinitionDlgItem *pItem = dynamic_cast<xVUserTableDefinitionDlgItem*>(wdgt);
-                    if (pItem)
-                    {
+                    if (pItem) {
+                        // data should be directly modified by the dialog
+                    }
+                }
+                if (var.userType()==QMetaType::type(("xVTextPropPtr")))
+                {
+                    xVTextPropertyDlgItem *pItem = dynamic_cast<xVTextPropertyDlgItem*>(wdgt);
+                    if (pItem) {
+                        // data should be directly modified by the dialog
+                    }
+                }
+                if (var.userType()==QMetaType::type(("xVAxisPropPtr")))
+                {
+                    xVAxisPropertyDlgItem *pItem = dynamic_cast<xVAxisPropertyDlgItem*>(wdgt);
+                    if (pItem) {
                         // data should be directly modified by the dialog
                     }
                 }
                 if (var.userType()==QMetaType::type(("xVEvalCondition")))
                 {
                     xVEquationDlgItem *pItem = dynamic_cast<xVEquationDlgItem*>(wdgt);
-                    if (pItem)
-                    {
+                    if (pItem) {
                         ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(xVEvalCondition(pItem->equation()));
                     }
                 }
@@ -251,8 +327,6 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
     if (pParamMp==nullptr) return;
 
     disconnect(this,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(itemChanged_SLOT(QTableWidgetItem *)));
-    setUpdatesEnabled(false);
-
     pParamMpRef=pParamMp;
     pCurrentObj=pObj;
 
@@ -321,13 +395,11 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
         xPROP_TYPE prop=propForId(pParamMp,idVec[i],key);
         setRowCount(r+1);
         qApp->processEvents();
-        if (!prop._subGrp.isEmpty() && !_conditions.contains(prop._subGrp)) setRowHidden(r,true);
-        else setRowHidden(r,false);
         QTableWidgetItem *pItem0=new QTableWidgetItem(key);
         pItem0->setFlags(Qt::ItemIsEnabled|Qt::ItemIsSelectable);
         pItem0->setTextAlignment(Qt::AlignRight|Qt::AlignVCenter);
         bool handledByDialog = handeledByDialogLst.contains(key);
-        handledByDialog ? pItem0->setIcon(QIcon(QPixmap("://images/lock_closed.png"))) : pItem0->setIcon(QIcon(QPixmap("://images/lock_open.png")));
+        (handledByDialog || !prop._enabled) ? pItem0->setIcon(QIcon(QPixmap("://images/lock_closed.png"))) : pItem0->setIcon(QIcon(QPixmap("://images/lock_open.png")));
         setItem(r,0,pItem0);
 
         bool _realDataType = false;
@@ -429,6 +501,7 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
                 xVUserTableDefinitionDlgItem* pItem = new xVUserTableDefinitionDlgItem();
                 if (dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj)) pItem->setRef(dynamic_cast<xVUserTableImportDlgObj*>(pCurrentObj));
                 if (dynamic_cast<xVVarDefinitionObj*>(pCurrentObj)) pItem->setRef(dynamic_cast<xVVarDefinitionObj*>(pCurrentObj));
+                if (dynamic_cast<xVReportObj*>(pCurrentObj)) pItem->setRef(dynamic_cast<xVReportObj*>(pCurrentObj));
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
@@ -458,21 +531,20 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
             {
                 xVDoubleValueDlgItem* pItem = new xVDoubleValueDlgItem();
                 xLimitedDouble val=prop._value.value<xLimitedDouble>();
+                pItem->setSliderReduction(val._precision);
                 pItem->setRange(val._lowerLimit,val._upperLimit);
                 pItem->setValue(val._value);
-                pItem->setSliderReduction(val._precision);
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
 
                 _realDataType = true;
             }
-            if ((int)prop._value.userType()==QMetaType::type("QFileInfo"))
+            if ((int)prop._value.userType()==QMetaType::type("xFileName"))
             {
                 xVFileImportDlgItem* pItem = new xVFileImportDlgItem();
-                pItem->setMode(xVFileImportDlgItem::READ_FILE);
-                QFileInfo pInfo=prop._value.value<QFileInfo>();
-                pItem->setFilePath(pInfo.absoluteFilePath());
+                xFileName pInfo=prop._value.value<xFileName>();
+                pItem->setFileName(pInfo);
                 setCellWidget(r,1,pItem);
                 connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
@@ -508,6 +580,24 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
                 //connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
                 connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
             }
+            if ((int)prop._value.userType()==QMetaType::type("xVTextPropPtr"))
+            {
+                xVTextPropertyDlgItem *pItem = new xVTextPropertyDlgItem();
+                xVTextPropPtr pTextProp =  prop._value.value<xVTextPropPtr>();
+                pItem->setRef(pTextProp);
+                setCellWidget(r,1,pItem);
+                connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
+                connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+            }
+            if ((int)prop._value.userType()==QMetaType::type("xVAxisPropPtr"))
+            {
+                xVAxisPropertyDlgItem *pItem = new xVAxisPropertyDlgItem();
+                xVAxisPropPtr pAxisProp =  prop._value.value<xVAxisPropPtr>();
+                pItem->setRef(pAxisProp);
+                setCellWidget(r,1,pItem);
+                connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
+                connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+            }
         }
             break;
         default: setItem(r,1,new QTableWidgetItem("unsupported data type"));break;
@@ -520,13 +610,25 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
             pItem->setForeground(Qt::red);
             pItem->setBackground(Qt::yellow);
             setItem(r,1,pItem);
-        }        
-        setRowHidden(r,!_realDataType && _onlyShowRealDatatypes);
+        }
+
+        QWidget *pWdgt=dynamic_cast<QWidget*>(cellWidget(r,1));
+        if (pWdgt) pWdgt->setEnabled(prop._enabled);
+
+        qApp->processEvents();
+
+        if (!prop._subGrp.isEmpty() && !_conditions.contains(prop._subGrp))
+            setRowHidden(r,true);
+        else
+            setRowHidden(r,false);
+        if (!isRowHidden(r)) setRowHidden(r,!_realDataType && _onlyShowRealDatatypes);
         ++r;
     }
 
-    setUpdatesEnabled(true);
     setColumnHidden(2,!_refObjFound || _objectColumnStaysHidden);
     resizeColumnToContents(0);
+    horizontalHeader()->resizeSection(1,150);
     connect(this,SIGNAL(itemChanged(QTableWidgetItem *)),this,SLOT(itemChanged_SLOT(QTableWidgetItem *)));
+
+    subgroupChanged();
 }

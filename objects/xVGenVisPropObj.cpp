@@ -73,8 +73,13 @@ void xVGenVisPropObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pShapeItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(-25,-15,140,45));
-
+    pGrpItem->setBoundingRectSize(QRectF(-22,-15,165,45));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     pStatusItem->moveBy(5,0);
     pGrpItem->addToGroup(pStatusItem);
 

@@ -14,6 +14,7 @@ public:
     xVUserTableDefinitionDlgItem(QWidget* parent=nullptr);
     void setRef(xVUserTableImportDlgObj*);
     void setRef(xVVarDefinitionObj*);
+    void setRef(xVReportObj *p);
 signals:
     void modified();
     void KSignal(const SIG_TYPE& ,void *);
@@ -22,6 +23,7 @@ protected slots:
 protected:
     xVUserTableImportDlgObj* pRefObj=nullptr;
     xVVarDefinitionObj* pVarDefObj=nullptr;
+    xVReportObj* pReportObj=nullptr;
 };
 
 #endif // XVUSERTABLEDEFINITIONDLGITEM_H

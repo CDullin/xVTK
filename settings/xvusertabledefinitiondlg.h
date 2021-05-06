@@ -26,20 +26,23 @@ public:
     public:
         xVAbstractBaseObj* pRefObj = nullptr;       // nullptr if global namespace
         xParamMap* pParamMap = nullptr;
+        xParamMap* pOutputParamMap = nullptr;
         DEF_NODE(){}
-        DEF_NODE(xVAbstractBaseObj* pO,xParamMap* pP){
+        DEF_NODE(xVAbstractBaseObj* pO,xParamMap* pP,xParamMap* pOP){
             pRefObj=pO;
             pParamMap=pP;
+            pOutputParamMap=pOP;
         }
     };
 
     explicit xVUserTableDefinitionDlg(QWidget *parent = nullptr);
     ~xVUserTableDefinitionDlg();
 
-    void addInputParam(const QString& key,xParamMap* p,xVAbstractBaseObj* pVObj=nullptr);
+    void addInputParam(const QString& key,xParamMap* p,xParamMap* pO=nullptr,xVAbstractBaseObj* pVObj=nullptr);
     void setOutputParam(xParamMap p,xVAbstractBaseObj* pVObj=nullptr);
     void setToDefinitionMode();
     void setToControlMode();
+    void setOutputConnectionsEnabled(bool b);
     xParamMap resultingMap();
 
     void accept() override;

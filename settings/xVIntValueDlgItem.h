@@ -20,7 +20,7 @@ signals:
     void modified();
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 protected:
-    virtual void resizeEvent(QResizeEvent *event) override;
+    //virtual void resizeEvent(QResizeEvent *event) override;
     qint64 _lowLimit,_highLimit,_value;
     QSpinBox *pSB=nullptr;
     QSlider *pSlider=nullptr;

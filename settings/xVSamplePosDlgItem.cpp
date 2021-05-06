@@ -65,10 +65,11 @@ void xVSamplePosDlgItem::setRange(const int& lb,const int& hb,const int axis)
         pSBZ->setRange(lb,hb);
     }
 }
-
+/*
 void xVSamplePosDlgItem::resizeEvent(QResizeEvent *event)
 {
     QSize size=event->size();
     setGeometry(0,0,size.width(),size.height());
     if (pBoxLayout) pBoxLayout->setGeometry(QRect(0,0,size.width(),size.height()));
 };
+*/

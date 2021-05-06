@@ -30,17 +30,27 @@ public slots:
 protected slots:
     void deleteObj();
     void displayPreview();
+    void connectionSelectionChanged();
+    void deleteConnection();
+    void moveConnectionUp();
+    void moveConnectionDown();
+    void identifyConnections(bool);
+    void activateNext();
+    void activatePrev();
 
 protected:
     void updateParameterTable(xVAbstractBaseObj* pObj);
+    void updateOutputConnectionList(xVAbstractBaseObj* pObj);
 
 signals:
-    void KSignal(const SIG_TYPE& t,void *pData);
+    void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 
 private:
     Ui::xVPropWdgt *ui;
     xVAbstractBaseObj *pCurrentObj=nullptr;
+    xConnector *pCurrentOutputConnector=nullptr;
     QTableWidget *pPropTable=nullptr;
+    QList <QGraphicsSimpleTextItem*> _identifierLst;
 };
 
 #endif // XVPROPWDGT_H

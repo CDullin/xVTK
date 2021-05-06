@@ -11,6 +11,8 @@
 #include <vtkRenderWindow.h>
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkAxesActor.h>
+#include <vtkLegendScaleActor.h>
+#include <vtkLightKit.h>
 
 class xV3DVisObj:public xVGenVisObj
 {
@@ -34,6 +36,7 @@ protected:
     vtkOrientationMarkerWidget *pOrientationMaker=nullptr;
     vtkAxesActor* pAxes= nullptr;
     vtkRenderWindowInteractor* pAxesInteractor = nullptr;
+    vtkLegendScaleActor *pScaleBar = nullptr;
 };
 
 #endif // XV3DVISOBJ_H

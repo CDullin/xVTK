@@ -169,8 +169,13 @@ void xVWaitObj::generateShape()
     pGrpItem->addToGroup(pBack);
     pStatusItem->setPos(35,-5);
     pGrpItem->addToGroup(pStatusItem);
-    pGrpItem->setBoundingRectSize(QRectF(0,-5,40,50));
-
+    pGrpItem->setBoundingRectSize(QRectF(-22,-15,85,60));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     pGrpItem->setFlags(QGraphicsItem::ItemIsMovable);
     pEffect=new QGraphicsDropShadowEffect();
     pEffect->setBlurRadius(5);

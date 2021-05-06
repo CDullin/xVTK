@@ -112,6 +112,11 @@ void xVObj_Basics::run()
 {
     status()==OS_UPDATE_NEEDED ? emit KSignal(ST_MSG,new QString(QString("object %1 started").arg((*paramMap())["name"]._value.toString()))) :
         KSignal(ST_MSG,new QString(QString("object %1 restarted").arg((*paramMap())["name"]._value.toString())));
+
+    if (pStartSoundEffect!=nullptr && _settings["play sounds"]._value.toBool()) {
+        pStartSoundEffect->setVolume(_settings["master volume"]._value.value<xLimitedDouble>()._value);
+        pStartSoundEffect->play();
+    }
 }
 
 int xVObj_Basics::countOf(xCONNECTOR_TYPE type)

@@ -78,9 +78,8 @@ void xVMeshVisPropObj::run()
         if ((*it2)->type()==xCT_INPUT && (*it2)->isEnabled())
             for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
             {
-                xVPolyObj *pIObj = dynamic_cast<xVPolyObj*>(*it);
-                if (pIObj && pIObj->outputParamMap()->contains("mesh"))
-                    mapper=(*pIObj->outputParamMap())["mesh"]._value.value<vtkPolyDataMapperPtr>();
+                if ((*it)->outputParamMap()->contains("mesh"))
+                    mapper=(*(*it)->outputParamMap())["mesh"]._value.value<vtkPolyDataMapperPtr>();
             }
 
     if (mapper)

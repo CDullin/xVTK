@@ -6,6 +6,24 @@
 #include <QGraphicsItemGroup>
 #include <QGraphicsSceneMouseEvent>
 #include <QPen>
+#include <math.h>
+
+class xRectItem: public QObject, public QGraphicsRectItem
+{
+    Q_OBJECT
+public:
+    xRectItem(QGraphicsItem *parent = nullptr):QObject(),QGraphicsRectItem(parent)
+    {
+        //setAcceptHoverEvents(true);
+        //setAcceptedMouseButtons(Qt::AllButtons);
+    }
+signals:
+    void moved(QPointF);
+protected:
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
+    virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+};
 
 class xEllipseItem:public QObject,public QGraphicsEllipseItem
 {
@@ -55,11 +73,17 @@ protected:
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override
     {
         QGraphicsItemGroup::mouseReleaseEvent(mouseEvent);
+        /*
+        QPointF p1=mouseEvent->pos();
+        QPointF p2=mouseEvent->lastPos();
+        if (sqrt(pow(p1.x()-p2.x(),2)+pow(p1.y()-p2.y(),2))>4)
+        */
         emit placed();
     }
     virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override
     {
         QGraphicsItemGroup::mouseDoubleClickEvent(event);
+        event->setAccepted(true);
         emit selected();
     }
 

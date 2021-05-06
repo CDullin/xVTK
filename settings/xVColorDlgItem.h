@@ -18,7 +18,6 @@ signals:
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 protected:
     QPixmap generatePixmap();
-    virtual void resizeEvent(QResizeEvent *event) override;
     virtual void mouseDoubleClickEvent(QMouseEvent *event) override;
     QColor _color;
 };

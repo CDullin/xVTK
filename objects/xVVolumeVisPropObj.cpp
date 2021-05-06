@@ -3,8 +3,13 @@
 #include "xVPolyObj.h"
 #include "xVVolObj.h"
 #include "vtkLODProp3D.h"
+#include "xVObjectTypes.h"
 
 #include <vtkImageReader.h>
+#include <vtkBoundingBox.h>
+#include <vtkOutlineFilter.h>
+#include <vtkPolyDataMapper.h>
+#include <QVector3D>
 
 
 xVVolumeVisPropObj::xVVolumeVisPropObj(const QString& txt):xVGenVisPropObj(txt)
@@ -77,9 +82,23 @@ void xVVolumeVisPropObj::run()
                     pRefVolObj=pIObj;
                     pDataImporter=(*pIObj->outputParamMap())["volume data"]._value.value<vtkImageDataPtr>();
                 }
+
+                xVGenFilterObj *pFObj = dynamic_cast<xVGenFilterObj*>(*it);
+                if (pFObj && pFObj->outputParamMap()->contains("image"))
+                {
+                    pRefVolObj = (xVVolObj*)((*pFObj->outputParamMap())["volume object"]._value.toULongLong());
+                    vtkImageDataPtr pImgData = (*pFObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+                    int dim[4];
+                    if (pImgData)
+                    {
+                         pImgData->GetDimensions(dim);
+                         if (dim[2]>1)
+                             pDataImporter=pImgData;
+                    }
+                }
             }
 
-    if (pDataImporter)
+    if (pDataImporter && pRefVolObj)
     {
 
         volumeProperty = vtkVolumeProperty::New();
@@ -89,7 +108,13 @@ void xVVolumeVisPropObj::run()
         volumeMapper = vtkFixedPointVolumeRayCastMapper::New();
         volumeMapper->SetInputData(pDataImporter);
         volumeMapper->SetBlendModeToComposite();
-
+        volumeMapper->LockSampleDistanceToInputSpacingOn();
+        /*
+        float _samplingDistance = (*pRefVolObj->paramMap())["resolution"]._value.value<QVector3D>().x();
+        volumeMapper->SetAutoAdjustSampleDistances(false);
+        volumeMapper->SetSampleDistance(_samplingDistance);
+        volumeMapper->SetInteractiveSampleDistance(_samplingDistance*2.0f);
+        */
         volume = vtkVolume::New();
         volume->SetMapper(volumeMapper);
         volume->SetProperty(volumeProperty);
@@ -116,6 +141,14 @@ void xVVolumeVisPropObj::run()
             colorFunc->AddRGBPoint(mi+2*br/3.0, 1.0, 1.0, 1.0);
             colorFunc->AddRGBPoint(pRefVolObj->histo()->info()._dataTypeMax, 1.0, 1.0, 1.0);
         }
+
+
+        vtkOutlineFilter *pBoundingBox = vtkOutlineFilter::New();
+        pBoundingBox->SetInputData(pDataImporter);
+        pBoundingBox->Update();
+        vtkPolyDataMapper* pBoundingBoxMapper = vtkPolyDataMapper::New();
+        pBoundingBoxMapper->SetInputData(pBoundingBox->GetOutput());
+
         _outputParamMp["volume"]._value = QVariant::fromValue(volume);
         _outputParamMp["volume"]._id=0;
         if (pRefVolObj)
@@ -124,8 +157,10 @@ void xVVolumeVisPropObj::run()
             _outputParamMp["dimension"]._id=1;
             _outputParamMp["resolution"]._id=2;
             _outputParamMp["resolution"]._value=(*pRefVolObj->paramMap())["resolution"]._value;
+            _outputParamMp["bounding box"]._id=3;
+            _outputParamMp["bounding box"]._value=QVariant::fromValue((vtkPolyDataMapperPtr)pBoundingBoxMapper);
         }
-        setStatus(OS_VALID);
+        setStatus(OS_VALID);     
 
         paramModified("");
     }
@@ -135,7 +170,6 @@ void xVVolumeVisPropObj::paramModified(const QString& txt)
 {
     xVGenVisPropObj::paramModified(txt);
     if (!volume) return;
-
 
     volumeProperty->SetInterpolationTypeToLinear();
     volumeProperty->SetAmbient(_paramMp["ambient light power"]._value.toDouble());
@@ -173,5 +207,18 @@ void xVVolumeVisPropObj::updateTimerTimeOut()
 {
    emit KSignal(ST_MSG,new QString("timeout"));
    volumeMapper->Update();
+
+   for (QList <xConnector*>::iterator it2=connectorLst()->begin();it2!=connectorLst()->end();++it2)
+       // find all connected and enabled inputs
+       if ((*it2)->type()==xCT_OUTPUT && (*it2)->isEnabled())
+           for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
+           {
+               xVObj_Basics *pIObj = dynamic_cast<xVObj_Basics*>(*it);
+               if (pIObj)
+               {
+                   pIObj->paramModified("");
+               }
+           }
+
    emit parameterModified();
 }

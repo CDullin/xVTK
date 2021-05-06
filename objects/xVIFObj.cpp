@@ -114,8 +114,13 @@ void xVIFObj::generateShape()
     pGrpItem->addToGroup(pTxtItem);
     pGrpItem->addToGroup(pYesItem);
     pGrpItem->addToGroup(pNoItem);
-    pGrpItem->setBoundingRectSize(QRectF(-50,-18,120,70));
-
+    pGrpItem->setBoundingRectSize(QRectF(-72,-18,155,70));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     pStatusItem->setPos(32,-5);
     pStatusItem->hide();
     pGrpItem->addToGroup(pStatusItem);

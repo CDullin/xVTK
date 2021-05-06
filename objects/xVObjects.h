@@ -10,6 +10,7 @@
 #include <QGraphicsColorizeEffect>
 #include <QPropertyAnimation>
 #include <QTimer>
+#include <QSoundEffect>
 
 enum OBJ_STATUS
 {
@@ -75,6 +76,8 @@ protected:
     xScrollTxtItem *pTxtItem=nullptr;
     QGraphicsEllipseItem *pStatusItem = nullptr;
     QGraphicsPixmapItem* pIconItem = nullptr;
+    QGraphicsRectItem* pBoundingRectItem = nullptr;
+    QSoundEffect *pStartSoundEffect = nullptr;
     int _maxInput = 1;
     int _maxOutput = 100;
     //QList <xVObj_Basics*> _connectedOutputs;

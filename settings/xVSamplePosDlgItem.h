@@ -29,7 +29,7 @@ signals:
     void modified();
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
 protected:
-    virtual void resizeEvent(QResizeEvent *event) override;
+    //virtual void resizeEvent(QResizeEvent *event) override;
 
     x3D_SAMPLE_POS _pos;
     qint64 _lowLimit[3],_highLimit[3];

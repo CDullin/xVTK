@@ -39,7 +39,8 @@ void xVUserTableImportDlgObj::run()
                 for (xParamMap::iterator it3=map.begin();it3!=map.end();++it3)
                 {
                     QString key=it3.key();
-                    if ((*it2)->paramMap()->contains(it3.key()) && (*it3).pRefObj==(*it2))
+                    if ((*it2)->paramMap()->contains(it3.key()))
+                            //&& (*it3).pRefObj==(*it2))
                             (*(*it2)->paramMap())[it3.key()]=it3.value();
                 }
     // override global namespace

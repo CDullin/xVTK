@@ -1,6 +1,6 @@
 #include "xVDoubleValueDlgItem.h"
-
 #include <QResizeEvent>
+#include <QHBoxLayout>
 
 xVDoubleValueDlgItem::xVDoubleValueDlgItem(QWidget *parent):QWidget(parent)
 {
@@ -13,6 +13,11 @@ xVDoubleValueDlgItem::xVDoubleValueDlgItem(QWidget *parent):QWidget(parent)
 
     connect(pSlider,SIGNAL(valueChanged(int)),this,SLOT(setValue(int)));
     connect(pSB,SIGNAL(valueChanged(double)),this,SLOT(setValue(double)));
+
+    QHBoxLayout *pVBox=new QHBoxLayout(this);
+    pVBox->setContentsMargins(10,0,0,0);
+    pVBox->addWidget(pSlider);
+    pVBox->addWidget(pSB);
 }
 
 void xVDoubleValueDlgItem::setValue(const double& v)
@@ -49,8 +54,10 @@ void xVDoubleValueDlgItem::setSliderReduction(const double& r)
 {
     _sliderReduction=r;
     pSlider->setRange(_lowLimit*_sliderReduction,_highLimit*_sliderReduction);
+    pSB->setSingleStep(1.0/(double)_sliderReduction);
 }
 
+/*
 void xVDoubleValueDlgItem::resizeEvent(QResizeEvent *event)
 {
     QSize size=event->size();
@@ -58,3 +65,4 @@ void xVDoubleValueDlgItem::resizeEvent(QResizeEvent *event)
     pSlider->setGeometry(0,0,size.width()-60,size.height());
     pSB->setGeometry(size.width()-60,0,60,size.height());
 }
+*/

@@ -36,13 +36,17 @@
 #include <QIcon>
 #include "xvEvalCondition.h"
 #include "xVAbstractBaseObj.h"
+#include <QCoreApplication>
 
+bool _abort=false;
 QMap<QString,xPROP_TYPE> _settings;
 QMap<QString,xPROP_TYPE> _globalNameSpace;
 QMap<QString,QStringList> _optionLsts;
 long long _objIDCount=0;
-QList <xVAbstractBaseObj*> _objLst;
-
+QList <xVDashBoard*> _dashboardLst;
+long _dashBoardCreateID=0;
+long _currentDashBoard=0;
+QString _session = "xVTK_session_"+QDateTime::currentDateTime().toString("yyMMddhhmmsszzz");
 
 void xPROP_TYPE::save(QDataStream &d)
 {
@@ -52,21 +56,23 @@ void xPROP_TYPE::save(QDataStream &d)
     QString ID="";
     if (pRefObj) ID=pRefObj->id();
     d << ID;
+    d << _enabled;
 }
 
 xVProgressObserver::xVProgressObserver(QObject *pParent):QObject(pParent),vtkProgressObserver()
 {}
 
 void xVProgressObserver::UpdateProgress(double amount){
-    emit KSignal(ST_SET_PROCESS,new int(amount*::_settings["progress scaling factor"]._value.toFloat()));
+    emit KSignal(ST_SET_PROCESS,new int(amount*::_settings["progress scaling factor"]._value.value<xLimitedDouble>()._value));
+    qApp->processEvents();
 }
 
-QDataStream &operator<<(QDataStream &out, const QFileInfo &myObj){
-    out << myObj.absoluteFilePath();
+QDataStream &operator<<(QDataStream &out, const xFileName &myObj){
+    out << myObj._fileName << myObj._type << myObj._relative;
     return out;}
-QDataStream &operator>>(QDataStream &in, QFileInfo &myObj){
+QDataStream &operator>>(QDataStream &in, xFileName &myObj){
     QString s;
-    in >> s;myObj.setFile(s);
+    in >> myObj._fileName >> myObj._type >> myObj._relative;
     return in;}
 QDataStream &operator<<(QDataStream &out, const QPointF &myObj){
     out << myObj.x() << myObj.y();
@@ -90,6 +96,7 @@ QDataStream &operator<<(QDataStream &out, const vtkPiecewiseFunctionPtr &myObj){
     }
     return out;
 }
+
 QDataStream &operator>>(QDataStream &in, vtkPiecewiseFunctionPtr &myObj)
 {
     quint16 size; in >> size;
@@ -167,7 +174,7 @@ void saveToStream(QDataStream &d,const QVariant& v)
 QString objName2objId(const QString& name)
 {
     QString id="";
-    for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList <xVAbstractBaseObj*>::iterator it=_dashboardLst[_currentDashBoard]->_objLst.begin();it!=_dashboardLst[_currentDashBoard]->_objLst.end();++it)
         if ((*it)->paramMap() && (*it)->paramMap()->contains("name") && (*(*it)->paramMap())["name"]._value.toString()==name)
             id=(*it)->id();
     return id;
@@ -176,7 +183,7 @@ QString objName2objId(const QString& name)
 xVAbstractBaseObj* objId2objPtr(const QString& id)
 {
     xVAbstractBaseObj* pObjPtr=nullptr;
-    for (QList <xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList <xVAbstractBaseObj*>::iterator it=_dashboardLst[_currentDashBoard]->_objLst.begin();it!=_dashboardLst[_currentDashBoard]->_objLst.end();++it)
         if ((*it)->id()==id) pObjPtr=(*it);
     return pObjPtr;
 }

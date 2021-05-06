@@ -16,9 +16,9 @@ xVHistoDlg::xVHistoDlg(QWidget *parent) :
     QDialog(parent)
 {
     setWindowTitle("xVTK - histogram");
-    if (QFileInfo("xVHistoSettings.dat").exists()) loadSettings();
-    else
-    {
+//    if (QFileInfo("xVHistoSettings.dat").exists()) loadSettings();
+//    else
+//    {
         _paramMp["live mode"]._id=1;
         _paramMp["live mode"]._value=true;
         _paramMp["histogram color"]._id=2;
@@ -47,7 +47,7 @@ xVHistoDlg::xVHistoDlg(QWidget *parent) :
         _paramMp["histogram mode"]._value="relative";
         _paramMp["histogram colorization"]._id=14;
         _paramMp["histogram colorization"]._value=true;
-    }
+//    }
 
     pVBLayout = new QVBoxLayout(this);
     pHBLayout = new QHBoxLayout(this);

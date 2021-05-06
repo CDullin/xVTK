@@ -5,6 +5,8 @@
 #include "xVTypes.h"
 #include <qmetatype.h>
 #include "vtkImageData.h"
+#include "xVIOVOX.h"
+#include "xVIOVFF.h"
 
 xVVolObj::xVVolObj(const QString& txt):xVGenImpObj(txt)
 {
@@ -12,7 +14,7 @@ xVVolObj::xVVolObj(const QString& txt):xVGenImpObj(txt)
     _paramMp["volume file type"]._id=1;
     _paramMp["volume file type"]._value="raw";
     _paramMp["file name"]._id=2;
-    _paramMp["file name"]._value=QVariant::fromValue(QFileInfo(::_settings["last volume file"]._value.toString()));
+    _paramMp["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,::_settings["last volume file"]._value.toString()));
     _paramMp["dimension"]._id=3;
     _paramMp["dimension"]._value=QVariant::fromValue(x3D_SAMPLE_POS(512,512,512));
     _paramMp["dimension"]._subGrp="raw";
@@ -74,20 +76,58 @@ void xVVolObj::run()
     xVGenImpObj::run();
     if (status()!=OS_UPDATE_NEEDED) return;
     // check if we get data streamed or if we load it
-    QFileInfo pInfo=_paramMp["file name"]._value.value<QFileInfo>();
+    QFileInfo pInfo(_paramMp["file name"]._value.value<xFileName>()._fileName);
     if (pInfo.isFile() && pInfo.exists())
     {
         setStatus(OS_RUNNING);
-        const char* pattern[]={"vox","vff","vtk","vol","raw"};
-        int fileType=-1;
-        for (int i=0;i<5;++i)
-            if (_paramMp["volume file type"]._value.toString()==pattern[i])
-                fileType=i;
-        switch (fileType)
+        QStringList fileType;fileType << "VOX" << "VFF" << "VTK" << "VOL" << "RAW";
+        switch (fileType.indexOf(pInfo.suffix().toUpper()))
         {
-        case 0 : // vox            
+        case 0 : // vox
+            {
+            xVIOVOX voxImporter(this);
+            connect(&voxImporter,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+            pDataPtr = voxImporter.read(pInfo.absoluteFilePath().toLatin1());
+            if (pHisto) pHisto->update();
+            _outputParamMp["volume data"]._value = QVariant::fromValue(pDataPtr);
+            _outputParamMp["volume data"]._id=0;
+            _outputParamMp["dimension"]._value=_paramMp["dimension"]._value=
+                    QVariant::fromValue(x3D_SAMPLE_POS(voxImporter.info()._dim[0],voxImporter.info()._dim[1],voxImporter.info()._dim[2]));
+            _outputParamMp["dimension"]._id=1;
+            _outputParamMp["resolution"]._id=2;
+            _outputParamMp["resolution"]._value=
+                    //QVariant::fromValue(QVector3D(voxImporter.info()._vs[0],voxImporter.info()._vs[1],voxImporter.info()._vs[2]));
+                    QVariant::fromValue(QVector3D(1,1,1));
+            voxImporter.valid() ? setStatus(OS_VALID) : setStatus(OS_ERROR);
+            _paramMp["dimension"]._value=QVariant::fromValue(
+                        x3D_SAMPLE_POS(voxImporter.info()._dim[0],voxImporter.info()._dim[1],voxImporter.info()._dim[2]));
+            _paramMp["resolution"]._value=QVariant::fromValue(
+                        QVector3D(voxImporter.info()._vs[0],voxImporter.info()._vs[1],voxImporter.info()._vs[2]));
+            _paramMp["channel count"]._value=1;
+            }
             break;
         case 1 : // vff
+            {
+            xVIOVFF vffImporter(this);
+            connect(&vffImporter,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+            pDataPtr = vffImporter.read(pInfo.absoluteFilePath().toLatin1());
+            if (pHisto) pHisto->update();
+            _outputParamMp["volume data"]._value = QVariant::fromValue(pDataPtr);
+            _outputParamMp["volume data"]._id=0;
+            _outputParamMp["dimension"]._value=_paramMp["dimension"]._value=
+                    QVariant::fromValue(x3D_SAMPLE_POS(vffImporter.info()._dim[0],vffImporter.info()._dim[1],vffImporter.info()._dim[2]));
+            _outputParamMp["dimension"]._id=1;
+            _outputParamMp["resolution"]._id=2;
+            _outputParamMp["resolution"]._value=
+                    //QVariant::fromValue(QVector3D(voxImporter.info()._vs[0],voxImporter.info()._vs[1],voxImporter.info()._vs[2]));
+                    QVariant::fromValue(QVector3D(1,1,1));
+            vffImporter.valid() ? setStatus(OS_VALID) : setStatus(OS_ERROR);
+            _paramMp["dimension"]._value=QVariant::fromValue(
+                        x3D_SAMPLE_POS(vffImporter.info()._dim[0],vffImporter.info()._dim[1],vffImporter.info()._dim[2]));
+            _paramMp["resolution"]._value=QVariant::fromValue(
+                        QVector3D(vffImporter.info()._vs[0],vffImporter.info()._vs[1],vffImporter.info()._vs[2]));
+            _paramMp["channel count"]._value=1;
+            }
             break;
         case 2 : // vtk
             break;
@@ -129,13 +169,12 @@ void xVVolObj::run()
             x3D_SAMPLE_POS dim = _paramMp["dimension"]._value.value<x3D_SAMPLE_POS>();
             pDataImporter->SetDataExtent(0,dim.x-1,0,dim.y-1,0,dim.z-1);
             QVector3D res=_paramMp["resolution"]._value.value<QVector3D>();
-            //pDataImporter->SetDataSpacing(res.x(),res.y(),res.z());
             pDataImporter->SetDataSpacing(1,1,1);
             pDataImporter->SetHeaderSize(_paramMp["header size"]._value.toLongLong());
             emit KSignal(ST_SET_PROCESS_RANGE,
                          new QPoint(
-                             pDataImporter->GetProgressMinValue()*::_settings["progress scaling factor"]._value.toFloat(),
-                             pDataImporter->GetProgressMaxValue()*::_settings["progress scaling factor"]._value.toFloat()));
+                             pDataImporter->GetProgressMinValue()*::_settings["progress scaling factor"]._value.value<xLimitedDouble>()._value,
+                             pDataImporter->GetProgressMaxValue()*::_settings["progress scaling factor"]._value.value<xLimitedDouble>()._value));
             emit KSignal(ST_SET_PROCESS_TXT,new QString("loading ... "));
 
             pDataImporter->SetProgressObserver(pProgObserver);
@@ -144,6 +183,7 @@ void xVVolObj::run()
             pDataImporter->Update();
 
             pDataPtr = pDataImporter->GetOutput();
+            pDataPtr->SetSpacing(res[0],res[1],res[2]);
             if (pHisto) pHisto->update();
 
             _outputParamMp["volume data"]._value = QVariant::fromValue(pDataImporter->GetOutput());

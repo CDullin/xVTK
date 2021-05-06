@@ -4,6 +4,7 @@
 #include "xVTypes.h"
 #include "xVObjects.h"
 #include "xVGenImpObj.h"
+#include "xVCVSImportPreviewDlg.h"
 
 //!
 //! \brief The xVImportCVSObj class
@@ -17,6 +18,9 @@ public:
     xVImportCVSObj(QDataStream&);
     virtual void run() override;
     virtual void reset() override;
+    virtual void openPreview() override;
+protected:
+    xVCVSImportPreviewDlg *pPrevDlg=nullptr;
 };
 
 #endif // XVIMPORTCVSOBJ_H

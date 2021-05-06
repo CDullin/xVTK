@@ -18,6 +18,7 @@ xVGenImpObj::xVGenImpObj(const QString& txt):xVObj_Basics()
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     generateShape();
+
     xConnector* pOutputCon=new xConnector(this);
     _connectorLst.append(pOutputCon);
     pOutputCon->setToOutput();
@@ -40,6 +41,16 @@ xVGenImpObj::xVGenImpObj(const QString& txt):xVObj_Basics()
     connect(pParamInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     connect(pInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 }
+
+void xVGenImpObj::paramModified(const QString& txt){
+    if (txt=="file name") {
+        QFileInfo info(_paramMp[txt]._value.value<xFileName>()._fileName);
+        _paramMp["name"]._value=info.fileName();
+        pTxtItem->setText(info.fileName());
+    }
+    emit parameterModified();
+}
+
 
 void xVGenImpObj::run()
 {
@@ -76,8 +87,13 @@ void xVGenImpObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pShapeItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(0,-15,150,45));
-
+    pGrpItem->setBoundingRectSize(QRectF(-20,-15,165,45));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     pStatusItem->moveBy(15,0);
     pGrpItem->addToGroup(pStatusItem);
 

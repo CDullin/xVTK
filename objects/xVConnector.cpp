@@ -6,6 +6,7 @@ xConnector::xConnector(xVObj_Basics* o):QObject(){
     _type=xCT_INVALID;
     pBaseObj=o;
     _id="CON"+QDateTime::currentDateTime().toString("yyMMddhhmmsszzz")+QString("_%1").arg(::_objIDCount++);
+    connect(this,SIGNAL(KSignal(const SIG_TYPE&,void*)),o,SIGNAL(KSignal(const SIG_TYPE&,void*)));
 }
 
 void xConnector::generateShape()
@@ -90,6 +91,10 @@ void xConnector::setToOutput()
     generateShape();
 }
 
+void xConnector::addConObject(xVObj_Basics* pVObj){_connectToLst.append(pVObj);emit KSignal(ST_OBJ_ADDED_TO_CONNECTOR,this);}
+void xConnector::removeConObj(xVObj_Basics* pVObj){_connectToLst.removeAll(pVObj);emit KSignal(ST_OBJ_REMOVED_FROM_CONNECTOR,this);}
+bool xConnector::connectedTo(xVObj_Basics* pVObj){return _connectToLst.contains(pVObj);}
+
 xConnector::xConnector(xVObj_Basics* pVobj,QDataStream &d):QObject()
 {
     pBaseObj=pVobj;
@@ -104,6 +109,8 @@ xConnector::xConnector(xVObj_Basics* pVobj,QDataStream &d):QObject()
         _idLst.append(id);
     }
     generateShape();
+
+    connect(this,SIGNAL(KSignal(const SIG_TYPE&,void* )),pVobj,SIGNAL(KSignal(const SIG_TYPE&,void* )));
 }
 
 void xConnector::save(QDataStream &d)

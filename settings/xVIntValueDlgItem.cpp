@@ -1,6 +1,6 @@
 #include "xVIntValueDlgItem.h"
-
 #include <QResizeEvent>
+#include <QHBoxLayout>
 
 xVIntValueDlgItem::xVIntValueDlgItem(QWidget *parent):QWidget(parent)
 {
@@ -13,6 +13,11 @@ xVIntValueDlgItem::xVIntValueDlgItem(QWidget *parent):QWidget(parent)
 
     connect(pSlider,SIGNAL(valueChanged(int)),this,SLOT(setValue(int)));
     connect(pSB,SIGNAL(valueChanged(int)),this,SLOT(setValue(int)));
+
+    QHBoxLayout *pVBox=new QHBoxLayout(this);
+    pVBox->setContentsMargins(10,0,0,0);
+    pVBox->addWidget(pSlider);
+    pVBox->addWidget(pSB);
 }
 
 void xVIntValueDlgItem::setValue(const int& v)
@@ -34,6 +39,7 @@ void xVIntValueDlgItem::setRange(const int& lb,const int& hb)
     _highLimit=hb;
 }
 
+/*
 void xVIntValueDlgItem::resizeEvent(QResizeEvent *event)
 {
     QSize size=event->size();
@@ -41,3 +47,4 @@ void xVIntValueDlgItem::resizeEvent(QResizeEvent *event)
     pSlider->setGeometry(0,0,size.width()-60,size.height());
     pSB->setGeometry(size.width()-60,0,60,size.height());
 }
+*/

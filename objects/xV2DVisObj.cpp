@@ -8,6 +8,14 @@
 #include "vtkImageActor.h"
 #include "vtkImageMapper3D.h"
 #include "vtkVolumeProperty.h"
+#include "vtkImageMapper.h"
+#include "vtkInformation.h"
+#include "vtkMapper.h"
+#include "vtkActor2D.h"
+#include "vtkImageChangeInformation.h"
+#include "vtkCamera.h"
+#include "xVObjectTypes.h"
+#include "xVGenImpObj.h"
 
 #include <stdlib.h>
 using namespace std;
@@ -25,6 +33,8 @@ xV2DVisObj::xV2DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["direction"]._id = 4;
     _paramMp["direction"]._value = QVariant::fromValue(QVector3D(0,0,1));
     _paramMp["direction"]._subGrp="free-plane";
+    _paramMp["scaling"]._id = 5;
+    _paramMp["scaling"]._value = QVariant::fromValue(xLimitedDouble(1,0.01,5,100));
     _paramMp["background color1"]._id = 10;
     _paramMp["background color1"]._value = QVariant::fromValue(QColor(100,100,100));
     _paramMp["background color2"]._id = 11;
@@ -32,7 +42,6 @@ xV2DVisObj::xV2DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["background gradient"]._id = 12;
     _paramMp["background gradient"]._value = true;
     _maxInput = 1000;
-
 }
 
 xV2DVisObj::xV2DVisObj(QDataStream &d):xVGenVisObj(d)
@@ -48,13 +57,15 @@ void xV2DVisObj::reset()
         emit KSignal(ST_REMOVE_VISUALIZATION_WDGT,pRenderWdgt);
         // free all resources
         pRenderer->Delete();
-        pActor->Delete();
-        pColorMapper->Delete();
-        pSlicer->Delete();
-        pSliceOrientation->Delete();
+        if (p2DActor) p2DActor->Delete();
+        if (pIActor) pIActor->Delete();
+        if (pColorMapper) pColorMapper->Delete();
+        if (pSlicer) pSlicer->Delete();
+        if (pSliceOrientation) pSliceOrientation->Delete();
         pRenderWdgt=nullptr;
         pRenderer=nullptr;
-        pActor=nullptr;
+        pIActor=nullptr;
+        p2DActor=nullptr;
         pColorMapper=nullptr;
         pSlicer=nullptr;
         pSliceOrientation=nullptr;
@@ -62,24 +73,8 @@ void xV2DVisObj::reset()
     }
 }
 
-void xV2DVisObj::run()
+void xV2DVisObj::run_volume_data()
 {
-    xVGenVisObj::run();
-    if (status()!=OS_UPDATE_NEEDED) return;
-
-    setStatus(OS_RUNNING);
-    if (pRenderWdgt==nullptr)
-    {
-
-        pRenderWdgt = new QVTKWidget();
-        pRenderWdgt->resize( 512, 512);
-        pRenderer = vtkRenderer::New();
-        pRenderWdgt->GetRenderWindow()->AddRenderer(pRenderer);
-        pRenderer->SetUseDepthPeeling(false);
-        pRenderer->SetUseDepthPeelingForVolumes(false);
-        pRenderer->SetUseHiddenLineRemoval(true);
-    }
-
     vtkVolume *pVtkVol=nullptr;
     x3D_SAMPLE_POS dimension(1,1,1);
 
@@ -152,12 +147,6 @@ void xV2DVisObj::run()
             break;
         }
 
-        // center or slice?
-        /*
-        pSliceOrientation->SetElement(0,3,center[0]);
-        pSliceOrientation->SetElement(1,3,center[1]);
-        pSliceOrientation->SetElement(2,3,center[2]);
-        */
         pSliceOrientation->SetElement(0,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
         pSliceOrientation->SetElement(1,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
         pSliceOrientation->SetElement(2,3,_paramMp["frame position"]._value.value<xLimitedInt>()._value);
@@ -174,44 +163,99 @@ void xV2DVisObj::run()
         pColorMapper->SetInputConnection(pSlicer->GetOutputPort());
 
         // Display the image
-        pActor = vtkImageActor::New();
-        pActor->GetMapper()->SetInputConnection(pColorMapper->GetOutputPort());
+        pIActor = vtkImageActor::New();
+        pIActor->GetMapper()->SetInputConnection(pColorMapper->GetOutputPort());
 
-        pRenderer->AddActor(pActor);
+        pRenderer->AddActor(pIActor);
 
         emit KSignal(ST_ADD_VISUALIZATION_WDGT,pRenderWdgt);
         setStatus(OS_VALID);
     }
-    /*
-  // Set up the interaction
-  vtkSmartPointer<vtkInteractorStyleImage> imageStyle =
-    vtkSmartPointer<vtkInteractorStyleImage>::New();
-  vtkSmartPointer<vtkRenderWindowInteractor> interactor =
-    vtkSmartPointer<vtkRenderWindowInteractor>::New();
-  interactor->SetInteractorStyle(imageStyle);
-  window->SetInteractor(interactor);
-  window->Render();
-
-  vtkSmartPointer<vtkImageInteractionCallback> callback =
-    vtkSmartPointer<vtkImageInteractionCallback>::New();
-  callback->SetImageReslice(reslice);
-  callback->SetInteractor(interactor);
-
-  imageStyle->AddObserver(vtkCommand::MouseMoveEvent, callback);
-  imageStyle->AddObserver(vtkCommand::LeftButtonPressEvent, callback);
-  imageStyle->AddObserver(vtkCommand::LeftButtonReleaseEvent, callback);
-
-  // Start interaction
-  // The Start() method doesn't return until the window is closed by the user
-  interactor->Start();
-
-     */
 }
 
-void xV2DVisObj::paramModified(const QString& txt)
+void xV2DVisObj::run_image_data()
 {
-    xVGenVisObj::paramModified(txt);    
-    if (!pRenderWdgt) return;
+    vtkImageData *pVTKImage = nullptr;
+    // connect to data
+    for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
+    {
+        // find all connected and enabled inputs
+        if ((*it2)->type()==xCT_INPUT && (*it2)->isEnabled())
+        {
+            for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
+            {
+                // find all vis property objects
+                xVGenVisPropObj *pIObj = dynamic_cast<xVGenVisPropObj*>(*it);
+                if (pIObj && pIObj->outputParamMap()->contains("image"))
+                    pVTKImage=(*pIObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+                xVGenFilterObj *pFObj = dynamic_cast<xVGenFilterObj*>(*it);
+                if (pFObj && pFObj->outputParamMap()->contains("image"))
+                {
+                    vtkImageDataPtr pImage = (*pFObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+                    if (pImage)
+                    {
+                        int dim[4];pImage->GetDimensions(dim);
+                        if (dim[2]<2) pVTKImage=pImage;
+                    }
+                }
+                // find all import obj
+                xVGenImpObj *pInObj = dynamic_cast<xVGenImpObj*>(*it);
+                if (pInObj && pInObj->outputParamMap()->contains("image"))
+                    pVTKImage=(*pInObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+            }
+        }
+    }
+
+    if (!pVTKImage) return;
+
+
+    vtkImageMapper *pMapper = vtkImageMapper::New();
+    pMapper->SetInputData(pVTKImage);
+    pMapper->SetColorLevel(127.5);
+    pMapper->SetColorWindow(255);
+
+    p2DActor = vtkActor2D::New();
+    p2DActor->SetMapper(pMapper);
+
+    pRenderer->AddActor(p2DActor);
+
+    int dim[4];
+    int size[2];
+    pVTKImage->GetDimensions((int*)&dim);
+    size[0]=(pRenderWdgt->GetRenderWindow()->GetSize())[0];
+    size[1]=(pRenderWdgt->GetRenderWindow()->GetSize())[1];
+    p2DActor->SetPosition((float)(size[0]-dim[0])/2.0,(float)(size[1]-dim[1])/2.0);
+
+    emit KSignal(ST_ADD_VISUALIZATION_WDGT,pRenderWdgt);
+    setStatus(OS_VALID);
+}
+
+void xV2DVisObj::run()
+{
+    xVGenVisObj::run();
+    if (status()!=OS_UPDATE_NEEDED) return;
+
+    setStatus(OS_RUNNING);
+    if (pRenderWdgt==nullptr)
+    {
+
+        pRenderWdgt = new QVTKWidget();
+        pRenderWdgt->resize( 512, 512);
+        pRenderer = vtkRenderer::New();
+        pRenderWdgt->GetRenderWindow()->AddRenderer(pRenderer);
+        pRenderer->SetUseDepthPeeling(false);
+        pRenderer->SetUseDepthPeelingForVolumes(false);
+        pRenderer->SetUseHiddenLineRemoval(true);
+    }
+
+    run_volume_data();
+    run_image_data();
+
+    //pRenderer->GetActiveCamera()->SetParallelScale(_paramMp["scaling"]._value.value<xLimitedDouble>()._value);
+}
+
+void xV2DVisObj::update_volume_data()
+{
     vtkVolume *pVtkVol=nullptr;
     // connect to data
     x3D_SAMPLE_POS dimension(1,1,1);
@@ -280,14 +324,67 @@ void xV2DVisObj::paramModified(const QString& txt)
         break;
     }
 
+    pSlicer->Update();
+    pIActor->Update();
+}
+
+void xV2DVisObj::update_image_data()
+{
+    vtkImageData *pVTKImage = nullptr;
+    // connect to data
+    for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
+    {
+        // find all connected and enabled inputs
+        if ((*it2)->type()==xCT_INPUT && (*it2)->isEnabled())
+        {
+            for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
+            {
+                // find all vis property objects
+                xVGenVisPropObj *pIObj = dynamic_cast<xVGenVisPropObj*>(*it);
+                if (pIObj && pIObj->outputParamMap()->contains("image"))
+                    pVTKImage=(*pIObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();                
+                xVGenFilterObj *pGFObj = dynamic_cast<xVGenFilterObj*>(*it);
+                if (pGFObj && pGFObj->outputParamMap()->contains("image"))
+                {
+                    vtkImageDataPtr pImg = (*pIObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+                    if (pImg)
+                    {
+                        int dim[4];pImg->GetDimensions(dim);
+                        if (dim[2]<2) pVTKImage=pImg;
+                    }
+                }
+                // find all import obj
+                xVGenImpObj *pInObj = dynamic_cast<xVGenImpObj*>(*it);
+                if (pInObj && pInObj->outputParamMap()->contains("image"))
+                    pVTKImage=(*pInObj->outputParamMap())["image"]._value.value<vtkImageDataPtr>();
+            }
+        }
+    }
+
+    if (!pVTKImage || !pRenderer) return;
+    int dim[4];
+    int size[2];
+    pVTKImage->GetDimensions((int*)&dim);
+    size[0]=(pRenderWdgt->GetRenderWindow()->GetSize())[0];
+    size[1]=(pRenderWdgt->GetRenderWindow()->GetSize())[1];
+    p2DActor->SetPosition((float)(size[0]-dim[0])/2.0,(float)(size[1]-dim[1])/2.0);
+}
+
+void xV2DVisObj::paramModified(const QString& txt)
+{
+    xVGenVisObj::paramModified(txt);    
+    if (!pRenderWdgt) return;
+
+    update_volume_data();
+    update_image_data();
+
     QColor c1=_paramMp["background color1"]._value.value<QColor>();
     pRenderer->SetBackground(c1.redF(),c1.greenF(),c1.blueF());
     QColor c2=_paramMp["background color2"]._value.value<QColor>();
     pRenderer->SetBackground2(c2.redF(),c2.greenF(),c2.blueF());
     pRenderer->SetGradientBackground(_paramMp["background gradient"]._value.toBool());
 
-    pSlicer->Update();
-    pActor->Update();
+    //pRenderer->GetActiveCamera()->SetParallelScale(_paramMp["scaling"]._value.value<xLimitedDouble>()._value);
     pRenderWdgt->update();
 }
 

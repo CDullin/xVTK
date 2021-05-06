@@ -21,10 +21,13 @@ protected slots:
     void browseFolder(const QString& path="");
     void itemActivated(QListWidgetItem *pItem);
     void loadItem(QListWidgetItem *pItem);
+    void updateGui();
+    void deleteDashboard();
 
 private:
     Ui::xVLoadDlg *ui;
     QString _currentDashboard;
+    QString _lastFolder;
 };
 
 #endif // XVLOADDLG_H

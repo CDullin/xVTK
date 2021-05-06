@@ -2,7 +2,7 @@
 
 xVGenVisObj::xVGenVisObj(const QString& txt):xVObj_Basics()
 {
-    _type = xVOT_VIEW;
+    _type = xVOT_OUTPUT;
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     generateShape();
@@ -24,13 +24,14 @@ xVGenVisObj::xVGenVisObj(const QString& txt):xVObj_Basics()
     xConnector* pParamInputCon=new xConnector(this);
     _connectorLst.append(pParamInputCon);
     pParamInputCon->setToParamInput();
-    pParamInputCon->item()->moveBy(45,-10);
+    pParamInputCon->item()->moveBy(27,-10);
     pGrpItem->addToGroup(pParamInputCon->item());
     connect(pParamInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 }
 
 xVGenVisObj::xVGenVisObj(QDataStream &d):xVObj_Basics(d)
 {
+    _type = xVOT_OUTPUT;
     generateShape();
     for (int i=0;i<_connectorLst.count();++i)
     {
@@ -74,8 +75,13 @@ void xVGenVisObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pShapeItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(-25,-15,130,45));
-
+    pGrpItem->setBoundingRectSize(QRectF(-25,-15,155,45));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     pGrpItem->addToGroup(pStatusItem);
 
     pGrpItem->setFlags(QGraphicsItem::ItemIsMovable);

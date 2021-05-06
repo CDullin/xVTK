@@ -26,11 +26,18 @@ public:
     virtual void reset() override;
 
 protected:
+
+    void run_volume_data();
+    void run_image_data();
+    void update_volume_data();
+    void update_image_data();
+
     vtkImageViewer2 *pImgViewer = nullptr;
     vtkMatrix4x4* pSliceOrientation = nullptr;
     vtkImageReslice *pSlicer = nullptr;
     vtkImageMapToColors* pColorMapper = nullptr;
-    vtkImageActor *pActor = nullptr;
+    vtkImageActor *pIActor = nullptr;
+    vtkActor2D *p2DActor = nullptr;
 
     QVTKWidget* pRenderWdgt=nullptr;
     vtkRenderer* pRenderer=nullptr;

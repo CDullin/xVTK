@@ -10,13 +10,13 @@ xVCallExternalObj::xVCallExternalObj(const QString& txt):xVGenImpObj()
 
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
-    _paramMp["file name"]._value = QVariant::fromValue(QFileInfo("unknown"));
+    _paramMp["file name"]._value = QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,"unknown"));
     _paramMp["file name"]._id = 1;
     _paramMp["arguments"]._value = "";
     _paramMp["arguments"]._id = 2;
     _paramMp["wait for finish"]._value = false;
     _paramMp["wait for finish"]._id = 3;
-    _paramMp["run in folder"]._value = QVariant::fromValue(QFileInfo(QDir::currentPath()));
+    _paramMp["run in folder"]._value = QVariant::fromValue(xFileName(xFileName::FN_INPUT_DIR,QDir::currentPath()));
     _paramMp["run in folder"]._id = 4;
     generateShape();
 
@@ -64,8 +64,8 @@ void xVCallExternalObj::run()
 
     setStatus(OS_RUNNING);
 
-    QFileInfo info = _paramMp["file name"]._value.value<QFileInfo>();
-    QFileInfo path = _paramMp["run in folder"]._value.value<QFileInfo>();
+    QFileInfo info = _paramMp["file name"]._value.value<xFileName>()._fileName;
+    QFileInfo path = _paramMp["run in folder"]._value.value<xFileName>()._fileName;
     QStringList arguments = _paramMp["arguments"]._value.toString().split(",");
     bool _wait = _paramMp["wait for finish"]._value.toBool();
 
@@ -120,8 +120,13 @@ void xVCallExternalObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pShapeItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(-25,-15,130,45));
-
+    pGrpItem->setBoundingRectSize(QRectF(-22,-15,152,45));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+*/
     QPen p2(Qt::black);
     p2.setWidth(2);
 

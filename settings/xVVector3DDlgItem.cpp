@@ -64,11 +64,11 @@ void xVVector3DDlgItem::setVector(const QVector3D& v)
     pSBY->setValue(v.y());
     pSBZ->setValue(v.z());
 }
-
+/*
 void xVVector3DDlgItem::resizeEvent(QResizeEvent *event)
 {
     QSize size=event->size();
     setGeometry(0,0,size.width(),size.height());
     if (pBoxLayout) pBoxLayout->setGeometry(QRect(0,0,size.width(),size.height()));
 }
-
+*/

@@ -27,9 +27,9 @@ public:
     void setToParamInput();
     void setEnabled(bool b);
     bool isEnabled(){return _enabled;}
-    void addConObject(xVObj_Basics* pVObj){_connectToLst.append(pVObj);}
-    void removeConObj(xVObj_Basics* pVObj){_connectToLst.removeAll(pVObj);}
-    bool connectedTo(xVObj_Basics* pVObj){return _connectToLst.contains(pVObj);}
+    void addConObject(xVObj_Basics* pVObj);
+    void removeConObj(xVObj_Basics* pVObj);
+    bool connectedTo(xVObj_Basics* pVObj);
     QList <xVObj_Basics*>* connectedObjects(){return &_connectToLst;}
     xCONNECTOR_TYPE type(){return _type;}
     QGraphicsItemGroup *item(){return pGrpItem;}
@@ -53,6 +53,7 @@ protected slots:
     void connectorActivated();
 signals:
     void activated(xConnector*,xCONNECTOR_TYPE);
+    void KSignal(const SIG_TYPE&,void* data=nullptr);
 protected:
     void generateShape();
     xVObj_Basics* pBaseObj=nullptr;

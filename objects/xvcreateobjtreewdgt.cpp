@@ -41,6 +41,14 @@ QTreeWidgetItem* xVCreateObjTreeWdgt::pickOrCreateParentItem(const QString& patt
     {
         pItem = new QTreeWidgetItem(QStringList() << pattern);
         pItem->setIcon(0,::_iconFactory.icon(pattern));
+
+        QLinearGradient rg(0,150,170,10);
+        rg.setColorAt(0,QColor(0,0,0));
+        rg.setColorAt(0.5,QColor(150,150,150));
+        rg.setColorAt(1,QColor(50,50,50));
+        QBrush brush(rg);
+        pItem->setBackground(0,brush);
+        pItem->setFlags(Qt::ItemIsEnabled);
         addTopLevelItem(pItem);
         pItem->setExpanded(true);
     }
@@ -54,5 +62,6 @@ void xVCreateObjTreeWdgt::generateHooksFromLst(HOOKLstPtr pHLst)
         QTreeWidgetItem* pItem=new QTreeWidgetItem(QStringList() << (*it)._name);
         pParentItem->addChild(pItem);
         pItem->setData(1,Qt::UserRole,QVariant((int)(*it)._objType));
+        pItem->setToolTip(0,it->_toolTip);
     }
 }

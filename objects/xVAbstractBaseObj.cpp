@@ -35,6 +35,11 @@ void xVAbstractBaseObj::translateObjIDsToPtr()
     }
 }
 
+void xVAbstractBaseObj::KSlot(const SIG_TYPE&,void* data)
+{
+
+}
+
 void xVAbstractBaseObj::save(QDataStream& d,bool _explicit)
 {
     d << _selected;

@@ -97,9 +97,9 @@
      <colorrole role="Base">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
+        <red>65</red>
+        <green>65</green>
+        <blue>65</blue>
        </color>
       </brush>
      </colorrole>
@@ -252,9 +252,9 @@
      <colorrole role="Base">
       <brush brushstyle="SolidPattern">
        <color alpha="255">
-        <red>0</red>
-        <green>0</green>
-        <blue>0</blue>
+        <red>65</red>
+        <green>65</green>
+        <blue>65</blue>
        </color>
       </brush>
      </colorrole>
@@ -534,32 +534,77 @@
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>300</height>
+        </size>
+       </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>3</number>
        </property>
        <widget class="QWidget" name="pDataTab">
         <attribute name="title">
          <string>dash board</string>
         </attribute>
-        <widget class="QGraphicsView" name="pDashBoardGV">
-         <property name="geometry">
-          <rect>
-           <x>3</x>
-           <y>3</y>
-           <width>916</width>
-           <height>192</height>
-          </rect>
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <property name="spacing">
+          <number>3</number>
          </property>
-         <property name="dragMode">
-          <enum>QGraphicsView::ScrollHandDrag</enum>
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
          </property>
-         <property name="resizeAnchor">
-          <enum>QGraphicsView::AnchorUnderMouse</enum>
+         <property name="leftMargin">
+          <number>3</number>
          </property>
-         <property name="viewportUpdateMode">
-          <enum>QGraphicsView::FullViewportUpdate</enum>
+         <property name="topMargin">
+          <number>3</number>
          </property>
-        </widget>
+         <property name="rightMargin">
+          <number>3</number>
+         </property>
+         <property name="bottomMargin">
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="xVDashboardToolBar" name="pDashboardToolbar" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>25</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>25</height>
+            </size>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QStackedWidget" name="pDashboardsStackWdgt">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="autoFillBackground">
+            <bool>false</bool>
+           </property>
+           <property name="currentIndex">
+            <number>-1</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="pMainVisTab">
         <attribute name="title">
@@ -570,12 +615,32 @@
         <attribute name="title">
          <string>reports</string>
         </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <property name="spacing">
+          <number>3</number>
+         </property>
+         <property name="leftMargin">
+          <number>3</number>
+         </property>
+         <property name="topMargin">
+          <number>3</number>
+         </property>
+         <property name="rightMargin">
+          <number>3</number>
+         </property>
+         <property name="bottomMargin">
+          <number>3</number>
+         </property>
+         <item>
+          <widget class="xVReportWdgt" name="pReportBox" native="true"/>
+         </item>
+        </layout>
        </widget>
        <widget class="QWidget" name="pSettingsAndDocTab">
         <attribute name="title">
          <string>settings &amp;&amp; documentation</string>
         </attribute>
-        <layout class="QHBoxLayout" name="horizontalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout_7">
          <property name="spacing">
           <number>3</number>
          </property>
@@ -594,17 +659,23 @@
          <item>
           <widget class="QSplitter" name="splitter_3">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Vertical</enum>
            </property>
-           <widget class="xVSettingsWdgt" name="pSettingsWdgt" native="true"/>
-           <widget class="QTextBrowser" name="textBrowser">
+           <widget class="xVHelpBrowser" name="pHelpBrowser">
             <property name="sizePolicy">
              <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
               <horstretch>0</horstretch>
               <verstretch>0</verstretch>
              </sizepolicy>
             </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>300</height>
+             </size>
+            </property>
            </widget>
+           <widget class="xVSettingsWdgt" name="pSettingsWdgt" native="true"/>
           </widget>
          </item>
         </layout>
@@ -702,38 +773,11 @@
              <number>2</number>
             </property>
             <item>
-             <widget class="QToolButton" name="pClearTB">
+             <widget class="QToolButton" name="pVerifyTB">
               <property name="text">
-               <string>cl&amp;ear</string>
+               <string>&amp;verify</string>
               </property>
              </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="pSaveTB">
-              <property name="text">
-               <string>&amp;save</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="pLoadTB">
-              <property name="text">
-               <string>&amp;load</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
             </item>
             <item>
              <widget class="QToolButton" name="pStepTB">
@@ -746,6 +790,23 @@
              <widget class="QToolButton" name="pRunTB">
               <property name="text">
                <string>r&amp;un</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="pStopTB">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>&amp;stop</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="pCompileTB">
+              <property name="text">
+               <string>c&amp;ompile</string>
               </property>
              </widget>
             </item>
@@ -782,7 +843,7 @@
         <enum>QTabWidget::South</enum>
        </property>
        <property name="currentIndex">
-        <number>1</number>
+        <number>0</number>
        </property>
        <widget class="QWidget" name="pMSGTab">
         <attribute name="title">
@@ -1030,6 +1091,31 @@ christian.dullin@protonmail.com</string>
        </widget>
       </widget>
      </item>
+     <item>
+      <widget class="xVClock" name="pClockWdgt">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>69</width>
+         <height>80</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>69</width>
+         <height>80</height>
+        </size>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>
@@ -1062,6 +1148,28 @@ christian.dullin@protonmail.com</string>
    <extends>QWidget</extends>
    <header location="global">xvsidepanelwdgt.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>xVDashboardToolBar</class>
+   <extends>QWidget</extends>
+   <header>xVDashboardToolBar.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>xVHelpBrowser</class>
+   <extends>QTextBrowser</extends>
+   <header>xVHelpBrowser.h</header>
+  </customwidget>
+  <customwidget>
+   <class>xVReportWdgt</class>
+   <extends>QWidget</extends>
+   <header>xVReportWdgt.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>xVClock</class>
+   <extends>QLabel</extends>
+   <header>xVClock.h</header>
   </customwidget>
  </customwidgets>
  <resources>

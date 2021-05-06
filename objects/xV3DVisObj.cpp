@@ -1,11 +1,22 @@
 #include "xV3DVisObj.h"
 #include "xVGenVisPropObj.h"
+#include "xVTextPropertyDlgItem.h"
+#include "xVAxisPropertyDlgItem.h"
 #include "vtkOpenGLRenderWindow.h"
 #include "vtkGenericOpenGLRenderWindow.h"
 #include "vtkCubeSource.h"
 #include "vtkPolyDataMapper.h"
 #include "vtkProperty.h"
 #include "vtkLODProp3D.h"
+#include "vtkLegendScaleActor.h"
+#include "vtkCamera.h"
+#include "vtkLightCollection.h"
+#include "vtkLight.h"
+#include "vtkImagePlaneWidget.h"
+#include "xVTextPropertyDlgItem.h"
+#include "vtkBoxWidget.h"
+#include "vtkAbstractVolumeMapper.h"
+#include "vtkDataSet.h"
 #include <QDockWidget>
 #include <QProcess>
 #include <QTextStream>
@@ -33,12 +44,51 @@ xV3DVisObj::xV3DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["light follows camera"]._value = true;
     _paramMp["double sided lighting"]._id = 8;
     _paramMp["double sided lighting"]._value = true;
-    _paramMp["use shadows"]._id = 9;
+    _paramMp["light intensity"]._id = 9;
+    _paramMp["light intensity"]._value = QVariant::fromValue(xLimitedDouble(0.5,0,1.0,100));
+    _paramMp["use shadows"]._id = 20;
     _paramMp["use shadows"]._value = true;
-    _paramMp["hidden line removal"]._id = 10;
+    _paramMp["hidden line removal"]._id = 21;
     _paramMp["hidden line removal"]._value = true;
-    _paramMp["orientation marker"]._id=11;
+    _paramMp["orientation marker"]._id=22;
     _paramMp["orientation marker"]._value = true;
+    _paramMp["scale bar"]._id=30;
+    _paramMp["scale bar"]._value = true;
+    _paramMp["scale bar label mode"]._id=31;
+    _paramMp["scale bar label mode"]._value="distance";
+    _optionLsts["scale bar label mode"] << "distance" << "XY coordinates";
+    _paramMp["right axis visible"]._id=32;
+    _paramMp["right axis visible"]._value=true;
+    _paramMp["left axis visible"]._id=33;
+    _paramMp["left axis visible"]._value=true;
+    _paramMp["top axis visible"]._id=34;
+    _paramMp["top axis visible"]._value=true;
+    _paramMp["bottom axis visible"]._id=35;
+    _paramMp["bottom axis visible"]._value=true;
+    _paramMp["scale bar legend visible"]._id=36;
+    _paramMp["scale bar legend visible"]._value=true;
+    _paramMp["right axis offset"]._id=37;
+    _paramMp["right axis offset"]._value=QVariant::fromValue(xLimitedInt(20,0,1000));
+    _paramMp["left axis offset"]._id=38;
+    _paramMp["left axis offset"]._value=QVariant::fromValue(xLimitedInt(20,0,1000));
+    _paramMp["top axis offset"]._id=39;
+    _paramMp["top axis offset"]._value=QVariant::fromValue(xLimitedInt(20,0,1000));
+    _paramMp["bottom axis offset"]._id=40;
+    _paramMp["bottom axis offset"]._value=QVariant::fromValue(xLimitedInt(20,0,1000));
+    _paramMp["scale bar title font"]._id=41;
+    xVTextProp *pTxtProp = new xVTextProp();
+    _paramMp["scale bar title font"]._value=QVariant::fromValue(pTxtProp);
+    pTxtProp = new xVTextProp();
+    _paramMp["scale bar label font"]._id=42;
+    _paramMp["scale bar label font"]._value=QVariant::fromValue(pTxtProp);
+    _paramMp["right axis properties"]._id=50;
+    _paramMp["right axis properties"]._value=QVariant::fromValue(new xVAxisProp());
+    _paramMp["left axis properties"]._id=51;
+    _paramMp["left axis properties"]._value=QVariant::fromValue(new xVAxisProp());
+    _paramMp["top axis properties"]._id=52;
+    _paramMp["top axis properties"]._value=QVariant::fromValue(new xVAxisProp());
+    _paramMp["bottom axis properties"]._id=53;
+    _paramMp["bottom axis properties"]._value=QVariant::fromValue(new xVAxisProp());
 }
 
 xV3DVisObj::xV3DVisObj(QDataStream &d):xVGenVisObj(d)
@@ -60,11 +110,14 @@ void xV3DVisObj::run()
         pRenderWdgt->resize( 512, 512);
         pRenderer = vtkRenderer::New();
         pRenderWdgt->GetRenderWindow()->AddRenderer(pRenderer);
-        pRenderer->SetUseDepthPeeling(false);
-        pRenderer->SetUseDepthPeelingForVolumes(false);
+        pRenderer->SetUseDepthPeeling(true);
+        pRenderer->SetUseDepthPeelingForVolumes(true);
         pRenderer->SetUseHiddenLineRemoval(true);
+        pRenderer->SetAutomaticLightCreation(true);
         pRenderWdgt->GetRenderWindow()->SetLineSmoothing(1);
     }
+
+    vtkVolume *pVtkVol=nullptr;
 
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
     {
@@ -79,22 +132,61 @@ void xV3DVisObj::run()
                     pRenderer->AddActor((*pIObj->outputParamMap())["actor"]._value.value<vtkActorPtr>());
                 if (pIObj && pIObj->outputParamMap()->contains("volume"))
                 {
-                    vtkVolume *pVtkVol=(*pIObj->outputParamMap())["volume"]._value.value<vtkVolumePtr>();
+                    pVtkVol=(*pIObj->outputParamMap())["volume"]._value.value<vtkVolumePtr>();
                     pRenderer->AddVolume(pVtkVol);
                 }
+                /*
+                if ((*it)->outputParamMap()->contains("bounding box"))
+                {
+                    vtkActor *pBBoxActor = vtkActor::New();
+                    pBBoxActor->SetMapper((*(*it)->outputParamMap())["bounding box"]._value.value<vtkPolyDataMapperPtr>());
+                    pRenderer->AddActor(pBBoxActor);
+                }
+                */
             }
         }
-
-        pOrientationMaker = vtkOrientationMarkerWidget::New();
-        pOrientationMaker->SetInteractor(pRenderWdgt->GetInteractor());
-        pOrientationMaker->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-        pAxes = vtkAxesActor::New();
-        pOrientationMaker->SetOrientationMarker(pAxes);
-        pOrientationMaker->SetViewport( 0.0, 0.0, 0.4, 0.4 );
-        pOrientationMaker->SetEnabled( 1 );
-        pOrientationMaker->InteractiveOn();
     }
 
+    pRenderer->GetActiveCamera()->ParallelProjectionOn();
+    pRenderer->ResetCameraClippingRange();
+    pRenderer->ResetCamera();
+
+    pOrientationMaker = vtkOrientationMarkerWidget::New();
+    pOrientationMaker->SetInteractor(pRenderWdgt->GetInteractor());
+    pOrientationMaker->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+    pAxes = vtkAxesActor::New();
+    pOrientationMaker->SetOrientationMarker(pAxes);
+    pOrientationMaker->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+    pOrientationMaker->SetEnabled( 1 );
+    pOrientationMaker->InteractiveOn();
+
+    pScaleBar = vtkLegendScaleActor::New();
+    _paramMp["scale bar title font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendTitleProperty());
+    _paramMp["scale bar label font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendLabelProperty());
+    _paramMp["right axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetRightAxis());
+    _paramMp["left axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetLeftAxis());
+    _paramMp["top axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetTopAxis());
+    _paramMp["bottom axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetBottomAxis());
+    pRenderer->AddActor(pScaleBar);
+
+    /* works
+    vtkBoxWidget *pBBoxWdgt = vtkBoxWidget::New();
+    pBBoxWdgt->SetInteractor(pRenderWdgt->GetInteractor());
+    pBBoxWdgt->SetProp3D(pVtkVol);
+    pBBoxWdgt->PlaceWidget();
+    pBBoxWdgt->On();
+    */
+
+    vtkImagePlaneWidget *pPlaneWdgt = vtkImagePlaneWidget::New();
+    pPlaneWdgt->SetInteractor(pRenderWdgt->GetInteractor());
+    pPlaneWdgt->TextureVisibilityOn();
+    pPlaneWdgt->SetInputData(pVtkVol->GetMapper()->GetDataSetInput());
+    pPlaneWdgt->SetPlaneOrientationToYAxes();
+    pPlaneWdgt->SetSlicePosition(10);
+    pPlaneWdgt->UpdatePlacement();
+    pPlaneWdgt->On();
+
+    // adjusts the initial parameter
     paramModified("");
 
     emit KSignal(ST_ADD_VISUALIZATION_WDGT,pRenderWdgt);
@@ -142,7 +234,27 @@ void xV3DVisObj::paramModified(const QString &txt)
 
     //widget->SetInteractor( renderWindowInteractor );
     pOrientationMaker->SetEnabled( _paramMp["orientation marker"]._value.toBool() );
+    pScaleBar->SetVisibility(_paramMp["scale bar"]._value.toBool() );
+    _paramMp["scale bar label mode"]._value.toString()=="distance" ? pScaleBar->SetLabelModeToDistance() : pScaleBar->SetLabelModeToXYCoordinates();
+    pScaleBar->SetRightAxisVisibility(_paramMp["right axis visible"]._value.toBool());
+    pScaleBar->SetLeftAxisVisibility(_paramMp["left axis visible"]._value.toBool());
+    pScaleBar->SetTopAxisVisibility(_paramMp["top axis visible"]._value.toBool());
+    pScaleBar->SetBottomAxisVisibility(_paramMp["bottom axis visible"]._value.toBool());
+    pScaleBar->SetLegendVisibility(_paramMp["scale bar legend visible"]._value.toBool());
+    pScaleBar->SetRightBorderOffset(_paramMp["right axis offset"]._value.value<xLimitedInt>()._value);
+    pScaleBar->SetLeftBorderOffset(_paramMp["left axis offset"]._value.value<xLimitedInt>()._value);
+    pScaleBar->SetTopBorderOffset(_paramMp["top axis offset"]._value.value<xLimitedInt>()._value);
+    pScaleBar->SetBottomBorderOffset(_paramMp["bottom axis offset"]._value.value<xLimitedInt>()._value);
+    pScaleBar->Modified();
 
+    float intensity = _paramMp["light intensity"]._value.value<xLimitedDouble>()._value;
+    vtkLightCollection* pLightLst=pRenderer->GetLights();
+    vtkLight *pLight=pLightLst->GetNextItem();
+    while (pLight)
+    {
+        pLight->SetIntensity(intensity);
+        pLight=pLightLst->GetNextItem();
+    }
     pRenderWdgt->update();
 }
 

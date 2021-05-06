@@ -19,7 +19,7 @@ xVGenUserDlgObj::xVGenUserDlgObj(const QString& txt):xVObj_Basics()
     xConnector* pOutputCon=new xConnector(this);
     _connectorLst.append(pOutputCon);
     pOutputCon->setToOutput();
-    pOutputCon->item()->moveBy(100,12.5);
+    pOutputCon->item()->moveBy(87,12.5);
     pGrpItem->addToGroup(pOutputCon->item());
     connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
 }
@@ -33,13 +33,13 @@ void xVGenUserDlgObj::generateShape()
 {
     QPainterPath path;
     path.moveTo(5,0);
-    path.lineTo(80,0);
-    path.arcTo(QRectF(80-20,0,40,25),90,-180);
+    path.lineTo(67,0);
+    path.arcTo(QRectF(67-20,0,40,25),90,-180);
     path.lineTo(0,25);
     path.lineTo(5,0);
-    path.moveTo(80,5);
-    path.arcTo(QRectF(80-15,5,30,15),90,-180);
-    path.lineTo(80,5);
+    path.moveTo(67,5);
+    path.arcTo(QRectF(67-15,5,30,15),90,-180);
+    path.lineTo(67,5);
 
     QPen pen(Qt::black);
     QRadialGradient rg(10,10, 100, 0, 1, 5);
@@ -69,5 +69,11 @@ void xVGenUserDlgObj::generateShape()
     pGrpItem->setAcceptHoverEvents(true);
     pGrpItem->setAcceptedMouseButtons(Qt::AllButtons);
     pGrpItem->setHandlesChildEvents(false);
-    pGrpItem->setBoundingRectSize(QRectF(0,0,150,45));
+    pGrpItem->setBoundingRectSize(QRectF(0,0,125,30));
+/*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+    */
 }

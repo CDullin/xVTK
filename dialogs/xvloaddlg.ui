@@ -86,6 +86,13 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
+         <widget class="QToolButton" name="pDeleteTB">
+          <property name="text">
+           <string>&amp;delete</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
@@ -106,7 +113,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QToolButton" name="toolButton_3">
+         <widget class="QToolButton" name="pLoadTB">
           <property name="text">
            <string>&amp;load</string>
           </property>
@@ -149,7 +156,7 @@
   <tabstop>pFolderLEdit</tabstop>
   <tabstop>pBrowseTB</tabstop>
   <tabstop>toolButton_2</tabstop>
-  <tabstop>toolButton_3</tabstop>
+  <tabstop>pLoadTB</tabstop>
  </tabstops>
  <resources/>
  <connections>
@@ -170,7 +177,7 @@
    </hints>
   </connection>
   <connection>
-   <sender>toolButton_3</sender>
+   <sender>pLoadTB</sender>
    <signal>clicked()</signal>
    <receiver>xVLoadDlg</receiver>
    <slot>accept()</slot>

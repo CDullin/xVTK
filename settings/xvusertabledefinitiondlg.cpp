@@ -17,6 +17,7 @@ xVUserTableDefinitionDlg::xVUserTableDefinitionDlg(QWidget *parent) :
     connect(ui->pAddTB,SIGNAL(clicked()),this,SLOT(addItem()));
     connect(ui->pRemoveTB,SIGNAL(clicked()),this,SLOT(removeItem()));
     connect(ui->pControlledObjCB,SIGNAL(currentIndexChanged(int)),this,SLOT(sourceActivated(int)));
+    connect(ui->pPortCB,SIGNAL(currentIndexChanged(int)),this,SLOT(sourceActivated(int)));
     setToDefinitionMode();
 
     QStringList dataTypes;
@@ -45,6 +46,7 @@ void xVUserTableDefinitionDlg::setToDefinitionMode()
     ui->pMoveOutTB->hide();
     ui->pDefLab->setText("parameter definition");
     ui->pControlledObjCB->hide();
+    ui->pPortCB->hide();
 
     ui->pVarNameLEdit->show();
     ui->pTypeCB->show();
@@ -62,6 +64,7 @@ void xVUserTableDefinitionDlg::setToControlMode()
     ui->pMoveOutTB->show();
     ui->pDefLab->setText("defined input table");
     ui->pControlledObjCB->show();
+    ui->pPortCB->show();
 
     ui->pVarNameLEdit->hide();
     ui->pTypeCB->hide();
@@ -136,11 +139,24 @@ void xVUserTableDefinitionDlg::removeItem()
     else emit KSignal(ST_MSG,new QString("no selected item to remove found"));
 }
 
-void xVUserTableDefinitionDlg::addInputParam(const QString& key,xParamMap* p,xVAbstractBaseObj* pVObj)
+void xVUserTableDefinitionDlg::setOutputConnectionsEnabled(bool b)
+{
+    if (b) ui->pPortCB->setEnabled(true);
+    else
+    {
+        ui->pPortCB->setEnabled(false);
+        ui->pPortCB->setCurrentIndex(0);
+    }
+}
+
+void xVUserTableDefinitionDlg::addInputParam(const QString& key,xParamMap* p,xParamMap* pO,xVAbstractBaseObj* pVObj)
 {
     if (_whatToDefineMp.contains(key)) return;
     ui->pControlledObjCB->addItem(key);
-    _whatToDefineMp[key]=DEF_NODE(pVObj,p);
+    _whatToDefineMp[key];
+    _whatToDefineMp[key].pRefObj=pVObj;
+    _whatToDefineMp[key].pParamMap=p;
+    _whatToDefineMp[key].pOutputParamMap=pO;
 }
 
 void xVUserTableDefinitionDlg::sourceActivated(int i)
@@ -149,8 +165,12 @@ void xVUserTableDefinitionDlg::sourceActivated(int i)
     {
         qApp->processEvents();
         ui->pSrcPropTable->hide();
-        ui->pSrcPropTable->updateTable(_whatToDefineMp[ui->pControlledObjCB->currentText()].pParamMap,
-                _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj);
+        if (ui->pPortCB->currentText()=="input")
+            ui->pSrcPropTable->updateTable(_whatToDefineMp[ui->pControlledObjCB->currentText()].pParamMap,
+                    _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj);
+        else
+            ui->pSrcPropTable->updateTable(_whatToDefineMp[ui->pControlledObjCB->currentText()].pOutputParamMap,
+                    _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj);
         ui->pSrcPropTable->show();
     }
 }

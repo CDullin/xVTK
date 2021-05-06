@@ -20,6 +20,7 @@ QPixmap xVColorDlgItem::generatePixmap()
     pain.setBrush(grd);
     pain.fillRect(QRectF(0,0,width(),height()),QBrush(grd));
     pain.end();
+    setScaledContents(true);
     return pix;
 }
 
@@ -35,13 +36,6 @@ void xVColorDlgItem::setColor(const QColor& c)
 {
     _color = c;
     setPixmap(generatePixmap());
-}
-
-void xVColorDlgItem::resizeEvent(QResizeEvent *event)
-{
-    QSize size=event->size();
-    setGeometry(0,0,size.width(),size.height());
-    setColor(_color);
 }
 
 void xVColorDlgItem::mouseDoubleClickEvent(QMouseEvent *event)

@@ -19,16 +19,39 @@ void xVUserTableDefinitionDlgItem::clicked_SLOT()
             // find all connected and enabled parameter connections
             if ((*it2)->type()==xCT_OUTPUT && (*it2)->isEnabled())
                 for (QList<xVObj_Basics*>::iterator it3=(*it2)->connectedObjects()->begin();it3!=(*it2)->connectedObjects()->end();++it3)
-                    dlg.addInputParam((*(*it3)->paramMap())["name"]._value.toString(),(*it3)->paramMap(),(*it3));
+                    dlg.addInputParam((*(*it3)->paramMap())["name"]._value.toString(),(*it3)->paramMap(),nullptr,(*it3));
         }
 
 
         dlg.setOutputParam((*pRefObj->paramMap())["parameter table"]._value.value<xParamMap>(),pRefObj);
         dlg.setToControlMode();
+        dlg.setOutputConnectionsEnabled(false);
         dlg.exec();
         (*pRefObj->paramMap())["parameter table"]._value=QVariant::fromValue<xParamMap>(dlg.resultingMap());
 
         setText(QString("define parameter [%1]").arg((*pRefObj->paramMap())["parameter table"]._value.value<xParamMap>().count()));
+        emit modified();
+    }
+
+    if (pReportObj)
+    {
+        xVUserTableDefinitionDlg dlg;
+        dlg.addInputParam("global",&::_globalNameSpace,0);
+        for (QList <xConnector*>::iterator it2=pReportObj->connectorLst()->begin();it2!=pReportObj->connectorLst()->end();++it2)
+        {
+            // find all connected and enabled parameter connections
+            if ((*it2)->type()==xCT_INPUT && (*it2)->isEnabled())
+                for (QList<xVObj_Basics*>::iterator it3=(*it2)->connectedObjects()->begin();it3!=(*it2)->connectedObjects()->end();++it3)
+                    dlg.addInputParam((*(*it3)->paramMap())["name"]._value.toString(),(*it3)->paramMap(),(*it3)->outputParamMap(),(*it3));
+        }
+
+        dlg.setOutputParam((*pReportObj->paramMap())["parameter"]._value.value<xParamMap>(),pReportObj);
+        dlg.setToControlMode();
+        dlg.setOutputConnectionsEnabled(true);
+        dlg.exec();
+        (*pReportObj->paramMap())["parameter"]._value=QVariant::fromValue<xParamMap>(dlg.resultingMap());
+
+        setText(QString("define parameter [%1]").arg((*pReportObj->paramMap())["parameter"]._value.value<xParamMap>().count()));
         emit modified();
     }
 
@@ -37,6 +60,7 @@ void xVUserTableDefinitionDlgItem::clicked_SLOT()
         xVUserTableDefinitionDlg dlg;
         dlg.setOutputParam((*pVarDefObj->paramMap())["parameter table"]._value.value<xParamMap>(),pVarDefObj);
         dlg.setToDefinitionMode();
+        dlg.setOutputConnectionsEnabled(false);
         connect(&dlg,SIGNAL(KSignal(const SIG_TYPE&,void *)),this,SIGNAL(KSignal(const SIG_TYPE&,void *)));
         connect(this,SIGNAL(KSignal(const SIG_TYPE&,void *)),&dlg,SLOT(KSlot(const SIG_TYPE&,void *)));
         dlg.exec();
@@ -48,4 +72,5 @@ void xVUserTableDefinitionDlgItem::clicked_SLOT()
 
 void xVUserTableDefinitionDlgItem::setRef(xVUserTableImportDlgObj*p){pRefObj=p;}
 void xVUserTableDefinitionDlgItem::setRef(xVVarDefinitionObj*p){pVarDefObj=p;}
+void xVUserTableDefinitionDlgItem::setRef(xVReportObj *p){pReportObj=p;}
 

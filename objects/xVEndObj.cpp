@@ -8,6 +8,9 @@ xVEndObj::xVEndObj(const QString& txt):xVObj_Basics()
     _maxOutput=0;
     _maxInput=1000;
 
+    pStartSoundEffect = new QSoundEffect();
+    pStartSoundEffect->setSource(QUrl::fromLocalFile(":/sounds/sounds/done.wav"));
+
     generateShape();
     xConnector* pCon=new xConnector(this);
     _connectorLst.append(pCon);
@@ -21,6 +24,10 @@ xVEndObj::xVEndObj(const QString& txt):xVObj_Basics()
 xVEndObj::xVEndObj(QDataStream& d):xVObj_Basics(d)
 {
     _type = xVOT_END;
+
+    pStartSoundEffect = new QSoundEffect();
+    pStartSoundEffect->setSource(QUrl::fromLocalFile(":/sounds/sounds/done.wav"));
+
     generateShape();
     for (int i=0;i<_connectorLst.count();++i)
     {
@@ -77,8 +84,14 @@ void xVEndObj::generateShape()
     connect(pGrpItem,SIGNAL(selected()),this,SLOT(grpSelected()));
     pGrpItem->addToGroup(pShapeItem);
     pGrpItem->addToGroup(pTxtItem);
-    pGrpItem->setBoundingRectSize(QRectF(-25,-15,140,45));
+    pGrpItem->setBoundingRectSize(QRectF(-25,-15,83,58));
 
+    /*
+    pBoundingRectItem = new QGraphicsRectItem(pGrpItem->boundingRect());
+    pBoundingRectItem->setPen(QPen(Qt::white,2));
+    pBoundingRectItem->setBrush(QBrush(Qt::NoBrush));
+    pGrpItem->addToGroup(pBoundingRectItem);
+    */
     pStatusItem->moveBy(-35,0);
     pGrpItem->addToGroup(pStatusItem);
 

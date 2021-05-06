@@ -2,6 +2,9 @@
 #include "xvEvalCondition.h"
 #include "QVTKApplication.h"
 
+#include <QDir>
+#include "xVImageObj.h"
+
 int main(int argc, char *argv[])
 {
 /*
@@ -16,12 +19,20 @@ int main(int argc, char *argv[])
 
     double angle=xVEvalCondition::resultOf("sin({Var2|0})").toDouble();       
 */
-
-    xVEvalCondition e("1");
-    bool ok = e.toBool();
-    if (ok)
-        int i=0;
-
+/*
+    QDir d("/home/heimdall/development/sample_data/test_images");
+    d.setFilter(QDir::Files);
+    QFileInfoList lst=d.entryInfoList();
+    xVImageObj pImgObj;
+    for (int i=0;i<lst.count();++i)
+    {
+        pImgObj.reset();
+        (*pImgObj.paramMap())["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,lst[i].absoluteFilePath()));
+        pImgObj.run();
+        QImage img=pImgObj.convertToQImage((*pImgObj.outputParamMap())["image"]._value.value<vtkImageDataPtr>());
+        img.save(lst[i].absolutePath()+"/../conv_images/"+lst[i].fileName());
+    }
+*/
     QVTKApplication a(argc, argv);
     xVTKDlg w;
     w.show();

@@ -6,7 +6,7 @@ xVPolyObj::xVPolyObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_MESH;
     _paramMp["file name"]._id = 1;
-    _paramMp["file name"]._value = QVariant::fromValue(QFileInfo("no file"));
+    _paramMp["file name"]._value = QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,"no file"));
     _paramMp["test"]._id=2;
     _paramMp["test"]._value = 2.0;
 
@@ -134,7 +134,7 @@ void xVPolyObj::run()
     xVGenImpObj::run();
     if (status()!=OS_UPDATE_NEEDED) return;
     // test if file name exists
-    QFileInfo pInfo=_paramMp["file name"]._value.value<QFileInfo>();
+    QFileInfo pInfo(_paramMp["file name"]._value.value<xFileName>()._fileName);
     if (pInfo.isFile() && pInfo.exists())
     {
         setStatus(OS_RUNNING);
@@ -175,12 +175,12 @@ void xVPolyObj::paramModified(const QString &txt)
 
 void xVPolyObj::save(QDataStream &d,bool _explicit)
 {
-    QFileInfo pInfo=_paramMp["file name"]._value.value<QFileInfo>();
+    QFileInfo pInfo=_paramMp["file name"]._value.value<xFileName>()._fileName;
     if (_explicit && pInfo.isFile() && pInfo.exists())
     {
         QFile::copy(pInfo.absoluteFilePath(),_id+"."+pInfo.suffix());
         pInfo.setFile(_id+"."+pInfo.suffix());
-        _paramMp["file name"]._value=QVariant::fromValue(pInfo);
+        _paramMp["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,pInfo.absoluteFilePath(),true));
     }
 
     xVGenImpObj::save(d,_explicit);

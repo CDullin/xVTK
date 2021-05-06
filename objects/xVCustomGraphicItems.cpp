@@ -7,6 +7,36 @@
 #include <QBrush>
 #include <QFont>
 #include <QFontMetrics>
+#include <QGraphicsScene>
+
+void xRectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    setCursor(Qt::CrossCursor);
+    QGraphicsRectItem::hoverEnterEvent(event);
+}
+void xRectItem::hoverLeaveEvent(QGraphicsSceneHoverEvent *event)
+{
+    setCursor(Qt::ArrowCursor);
+    QGraphicsRectItem::hoverLeaveEvent(event);
+}
+void xRectItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
+{
+    QPointF pos = event->pos();
+    QPointF p2 = mapToScene(pos+QPointF(rect().width(),rect().height()));
+
+    float dx = p2.x()-pos.x();
+    float dy = p2.y()-pos.y();
+
+    if (pos.x()<0) pos.setX(0);
+    if (pos.y()<0) pos.setY(0);
+    /*
+    if (p2.x()>scene()->sceneRect().width()) pos.setX(scene()->sceneRect().right()-dx);
+    if (p2.y()>scene()->sceneRect().height()) pos.setY(scene()->sceneRect().bottom()-dy);
+*/
+    //emit moved(event->pos()-event->lastPos());
+    setPos(pos);
+    //QGraphicsRectItem::mouseMoveEvent(event);
+}
 
 void xEllipseItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {

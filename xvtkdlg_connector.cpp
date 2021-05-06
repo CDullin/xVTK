@@ -1,23 +1,24 @@
 #include "xvtkdlg.h"
 #include "ui_xvtkdlg.h"
+#include "xVDashboardView.h"
 
 void xVTKDlg::connectorActivated(xVObj_Basics* pEItem,xCONNECTOR_TYPE type)
 {
     // self connection is forbidden
-    if ((type==xCT_INPUT && pOutEItem && pOutEItem->activeConnector() && pEItem==pOutEItem) ||
-        (type==xCT_OUTPUT && pInEItem && pInEItem->activeConnector() && pEItem==pInEItem) ||
-        (type==xCT_PARAMETER && pInEItem && pInEItem->activeConnector() && pEItem==pInEItem))
+    if ((type==xCT_INPUT && _dashboardLst[_currentDashBoard]->pOutEItem && _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector() && pEItem==_dashboardLst[_currentDashBoard]->pOutEItem) ||
+        (type==xCT_OUTPUT && _dashboardLst[_currentDashBoard]->pInEItem && _dashboardLst[_currentDashBoard]->pInEItem->activeConnector() && pEItem==_dashboardLst[_currentDashBoard]->pInEItem) ||
+        (type==xCT_PARAMETER && _dashboardLst[_currentDashBoard]->pInEItem && _dashboardLst[_currentDashBoard]->pInEItem->activeConnector() && pEItem==_dashboardLst[_currentDashBoard]->pInEItem))
     {
-        _paramInConnectorSet = false;
-        _inConnectorSet = false;
-        _outConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_paramInConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_inConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_outConnectorSet = false;
 
-        if (pInEItem && pInEItem->activeConnector()) pInEItem->activeConnector()->setActivated(false);
-        if (pOutEItem && pOutEItem->activeConnector()) pOutEItem->activeConnector()->setActivated(false);
+        if (_dashboardLst[_currentDashBoard]->pInEItem && _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()) _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->setActivated(false);
+        if (_dashboardLst[_currentDashBoard]->pOutEItem && _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()) _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()->setActivated(false);
         if (pEItem->activeConnector()) pEItem->activeConnector()->setActivated(false);
 
-        pInEItem = nullptr;
-        pOutEItem = nullptr;
+        _dashboardLst[_currentDashBoard]->pInEItem = nullptr;
+        _dashboardLst[_currentDashBoard]->pOutEItem = nullptr;
 
         emit KSignal(ST_WARN_MSG,new QString("An object cannot be connected to itself"));
 
@@ -27,84 +28,85 @@ void xVTKDlg::connectorActivated(xVObj_Basics* pEItem,xCONNECTOR_TYPE type)
     // 1st out->in check
     if (type==xCT_INPUT && pEItem->activeConnector() && pEItem->activeConnector()->type()==xCT_INPUT)
     {
-        if (_inConnectorSet || _paramInConnectorSet)
+        if (_dashboardLst[_currentDashBoard]->_inConnectorSet || _dashboardLst[_currentDashBoard]->_paramInConnectorSet)
             //deactivate the old one
-            pInEItem->activeConnector()->setActivated(false);
-        pInEItem=pEItem;
-        _paramInConnectorSet = false;
-        _inConnectorSet = true;
+            _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->setActivated(false);
+        _dashboardLst[_currentDashBoard]->pInEItem=pEItem;
+        _dashboardLst[_currentDashBoard]->_paramInConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_inConnectorSet = true;
     }
-    if (type==xCT_INPUT && !pEItem->activeConnector() && _inConnectorSet)
+    if (type==xCT_INPUT && !pEItem->activeConnector() && _dashboardLst[_currentDashBoard]->_inConnectorSet)
     {
-        _inConnectorSet=false;
-        pInEItem=nullptr;
+        _dashboardLst[_currentDashBoard]->_inConnectorSet=false;
+        _dashboardLst[_currentDashBoard]->pInEItem=nullptr;
     }
     if (type==xCT_PARAMETER && pEItem->activeConnector() && pEItem->activeConnector()->type()==xCT_PARAMETER)
     {
-        if (_inConnectorSet || _paramInConnectorSet)
+        if (_dashboardLst[_currentDashBoard]->_inConnectorSet || _dashboardLst[_currentDashBoard]->_paramInConnectorSet)
             //deactivate the old one
-            pInEItem->activeConnector()->setActivated(false);
-        pInEItem=pEItem;
-        _inConnectorSet = false;
-        _paramInConnectorSet = true;
+            _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->setActivated(false);
+        _dashboardLst[_currentDashBoard]->pInEItem=pEItem;
+        _dashboardLst[_currentDashBoard]->_inConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_paramInConnectorSet = true;
     }
-    if (type==xCT_PARAMETER && !pEItem->activeConnector() && _paramInConnectorSet)
+    if (type==xCT_PARAMETER && !pEItem->activeConnector() && _dashboardLst[_currentDashBoard]->_paramInConnectorSet)
     {
-        _paramInConnectorSet=false;
-        pInEItem=nullptr;
+        _dashboardLst[_currentDashBoard]->_paramInConnectorSet=false;
+        _dashboardLst[_currentDashBoard]->pInEItem=nullptr;
     }
 
     // 1st out->in check
     if (type==xCT_OUTPUT && pEItem->activeConnector() && pEItem->activeConnector()->type()==xCT_OUTPUT)
     {
-        if (_outConnectorSet)
+        if (_dashboardLst[_currentDashBoard]->_outConnectorSet)
             //deactivate the old one
-            pOutEItem->activeConnector()->setActivated(false);
-        pOutEItem=pEItem;
-        _outConnectorSet=true;
+            _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()->setActivated(false);
+        _dashboardLst[_currentDashBoard]->pOutEItem=pEItem;
+        _dashboardLst[_currentDashBoard]->_outConnectorSet=true;
     }
-    if (type==xCT_OUTPUT && !pEItem->activeConnector() && _outConnectorSet)
+    if (type==xCT_OUTPUT && !pEItem->activeConnector() && _dashboardLst[_currentDashBoard]->_outConnectorSet)
     {
-        _outConnectorSet=false;
-        pOutEItem=nullptr;
+        _dashboardLst[_currentDashBoard]->_outConnectorSet=false;
+        _dashboardLst[_currentDashBoard]->pOutEItem=nullptr;
     }
 
     //2nd check if at anytime we have both
-    if ((_inConnectorSet || _paramInConnectorSet) && _outConnectorSet)
+    if ((_dashboardLst[_currentDashBoard]->_inConnectorSet || _dashboardLst[_currentDashBoard]->_paramInConnectorSet) && _dashboardLst[_currentDashBoard]->_outConnectorSet)
     {
-        if (_paramInConnectorSet)
+        if (_dashboardLst[_currentDashBoard]->_paramInConnectorSet)
         {
-            pInEItem->activeConnector()->addConObject(pOutEItem);
+            _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->addConObject(_dashboardLst[_currentDashBoard]->pOutEItem);
             //pInEItem->connectParamInputs()->append(pOutEItem);
-            pOutEItem->activeConnector()->addConObject(pInEItem);
+            _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()->addConObject(_dashboardLst[_currentDashBoard]->pInEItem);
             //pOutEItem->connectOutputs()->append(pInEItem);
-            xConnectorObj *pConObj = new xConnectorObj(pInEItem->activeConnector(),pOutEItem->activeConnector(),true);
-            ui->pDashBoardGV->scene()->addItem(pConObj->item());
+            xConnectorObj *pConObj = new xConnectorObj(_dashboardLst[_currentDashBoard]->pInEItem->activeConnector(),_dashboardLst[_currentDashBoard]->pOutEItem->activeConnector(),true);
+            _dashboardLst[_currentDashBoard]->pDashBoardGV->scene()->addItem(pConObj->item());
             emit KSignal(ST_ADD_OBJECT,pConObj);
-            connect(pOutEItem,SIGNAL(parameterModified()),pInEItem,SLOT(paramModified()));
+            connect(_dashboardLst[_currentDashBoard]->pOutEItem,SIGNAL(parameterModified()),_dashboardLst[_currentDashBoard]->pInEItem,SLOT(paramModified()));
         }
         else
         {
             // reimplement max connection check
-            if (pInEItem->countOfInputs()<pInEItem->maxInput() && pOutEItem->countOfOutputs()<pOutEItem->maxOutput())
+            if (_dashboardLst[_currentDashBoard]->pInEItem->countOfInputs()<_dashboardLst[_currentDashBoard]->pInEItem->maxInput() &&
+                    _dashboardLst[_currentDashBoard]->pOutEItem->countOfOutputs()<_dashboardLst[_currentDashBoard]->pOutEItem->maxOutput())
             {
-                pInEItem->activeConnector()->addConObject(pOutEItem);
-                pOutEItem->activeConnector()->addConObject(pInEItem);
-                xConnectorObj *pConObj = new xConnectorObj(pInEItem->activeConnector(),pOutEItem->activeConnector());
-                ui->pDashBoardGV->scene()->addItem(pConObj->item());
+                _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->addConObject(_dashboardLst[_currentDashBoard]->pOutEItem);
+                _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()->addConObject(_dashboardLst[_currentDashBoard]->pInEItem);
+                xConnectorObj *pConObj = new xConnectorObj(_dashboardLst[_currentDashBoard]->pInEItem->activeConnector(),_dashboardLst[_currentDashBoard]->pOutEItem->activeConnector());
+                _dashboardLst[_currentDashBoard]->pDashBoardGV->scene()->addItem(pConObj->item());
                 emit KSignal(ST_ADD_OBJECT,pConObj);
-                connect(pOutEItem,SIGNAL(parameterModified()),pInEItem,SLOT(paramModified()));
+                connect(_dashboardLst[_currentDashBoard]->pOutEItem,SIGNAL(parameterModified()),_dashboardLst[_currentDashBoard]->pInEItem,SLOT(paramModified()));
             }
             else emit KSignal(ST_WARN_MSG,new QString("Maximum connection count violated. Connection not established"));
         }
 
-        if (pInEItem->activeConnector()) pInEItem->activeConnector()->setActivated(false);
-        if (pOutEItem->activeConnector()) pOutEItem->activeConnector()->setActivated(false);
+        if (_dashboardLst[_currentDashBoard]->pInEItem->activeConnector()) _dashboardLst[_currentDashBoard]->pInEItem->activeConnector()->setActivated(false);
+        if (_dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()) _dashboardLst[_currentDashBoard]->pOutEItem->activeConnector()->setActivated(false);
 
-        _inConnectorSet = false;
-        _outConnectorSet = false;
-        _paramInConnectorSet = false;
-        pInEItem = nullptr;
-        pOutEItem = nullptr;
+        _dashboardLst[_currentDashBoard]->_inConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_outConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->_paramInConnectorSet = false;
+        _dashboardLst[_currentDashBoard]->pInEItem = nullptr;
+        _dashboardLst[_currentDashBoard]->pOutEItem = nullptr;
     }
 }

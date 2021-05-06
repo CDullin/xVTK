@@ -26,7 +26,7 @@ void xVTKDlg::reset(bool verbose)
 
     // find all end points / visulizations
     QList <xVObj_Basics*> _endPointLst;
-    for (QList<xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList<xVAbstractBaseObj*>::iterator it=_dashboardLst[_currentDashBoard]->_objLst.begin();it!=_dashboardLst[_currentDashBoard]->_objLst.end();++it)
     {
         xVObj_Basics* pVObj = dynamic_cast<xVObj_Basics*>(*it);
         // we take all those that have no output
@@ -46,7 +46,7 @@ void xVTKDlg::reset(bool verbose)
         recursiveRest(*it);
     }
     // then we reset all remaining objects
-    for (QList<xVAbstractBaseObj*>::iterator it=_objLst.begin();it!=_objLst.end();++it)
+    for (QList<xVAbstractBaseObj*>::iterator it=_dashboardLst[_currentDashBoard]->_objLst.begin();it!=_dashboardLst[_currentDashBoard]->_objLst.end();++it)
     {
         xVObj_Basics* pVObj = dynamic_cast<xVObj_Basics*>(*it);
         // we take all those that have no output

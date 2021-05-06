@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>images/colormap.png</file>
-        <file>images/seamless-circuit-board.png</file>
         <file>images/vtk-logo.png</file>
         <file>images/opacity_pattern.png</file>
         <file>images/lock_closed.png</file>
@@ -18,5 +17,28 @@
         <file>images/arduino.png</file>
         <file>images/logic.png</file>
         <file>images/properties.png</file>
+        <file>images/connection_symbol.png</file>
+        <file>images/param_connection_symbol.png</file>
+        <file>images/pattern_0.png</file>
+        <file>images/pattern_1.png</file>
+        <file>images/pattern_2.png</file>
+        <file>images/pattern_3.png</file>
+        <file>images/pattern_4.png</file>
+        <file>images/pattern_5.png</file>
+        <file>images/pattern_6.png</file>
+        <file>images/pattern_7.png</file>
+        <file>images/pattern_8.png</file>
+        <file>images/pattern_9.png</file>
+        <file>manual/manual.html</file>
+        <file>manual/manual_html_37a95b6e111d4fd4.png</file>
+        <file>images/dashboard.png</file>
+        <file>images/report.png</file>
+        <file>images/session.png</file>
+    </qresource>
+    <qresource prefix="/sounds">
+        <file>sounds/camera_shutter.wav</file>
+        <file>sounds/done.wav</file>
+        <file>sounds/error.wav</file>
+        <file>sounds/start.wav</file>
     </qresource>
 </RCC>

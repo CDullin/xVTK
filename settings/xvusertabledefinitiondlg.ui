@@ -64,6 +64,20 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QComboBox" name="pPortCB">
+           <item>
+            <property name="text">
+             <string>input</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>output</string>
+            </property>
+           </item>
+          </widget>
+         </item>
         </layout>
        </item>
        <item>
@@ -85,6 +99,9 @@
          </attribute>
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>25</number>
          </attribute>
         </widget>
        </item>
@@ -168,6 +185,9 @@
          </attribute>
          <attribute name="verticalHeaderVisible">
           <bool>false</bool>
+         </attribute>
+         <attribute name="verticalHeaderDefaultSectionSize">
+          <number>25</number>
          </attribute>
         </widget>
        </item>

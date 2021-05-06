@@ -11,5 +11,7 @@
 #include "xVColorDlgItem.h"
 #include "xVBoolDlgItem.h"
 #include "xVUserTableDefinitionDlgItem.h"
+#include "xVTextPropertyDlgItem.h"
+#include "xVAxisPropertyDlgItem.h"
 
 #endif // XVCUSTOMTABLEITEMS_H

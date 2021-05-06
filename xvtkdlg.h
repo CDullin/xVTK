@@ -1,13 +1,13 @@
 #ifndef XVTKDLG_H
 #define XVTKDLG_H
 
-#include <QGraphicsSceneMouseEvent>
 #include <QDialog>
 #include "xVObjects.h"
 #include "xVPolyObj.h"
 #include "xVTypes.h"
 #include "xVConnectorObj.h"
 #include "xvvismainwin.h"
+#include "xVSessionDlg.h"
 #include <QGraphicsScene>
 #include "vtkGUISupportQtModule.h"
 #include "vtkAutoInit.h"
@@ -21,28 +21,6 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class xVTKDlg; }
 QT_END_NAMESPACE
 
-//!
-//! \brief The xVGraphicsScene class
-//!
-
-class xVGraphicsScene: public QGraphicsScene
-{
-    Q_OBJECT
-public:
-    xVGraphicsScene():QGraphicsScene(){}
-signals:
-    void dblClicked();
-    void rDblClicked();
-protected:
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) override
-    {
-        if (mouseEvent->button()==Qt::LeftButton)
-            emit dblClicked();
-        if (mouseEvent->button()==Qt::RightButton)
-            emit rDblClicked();
-        QGraphicsScene::mouseDoubleClickEvent(mouseEvent);
-    }
-};
 
 //!
 //! \brief The xVTKDlg class
@@ -84,12 +62,13 @@ protected slots:
     //! allows exporting the dashboard into a target folder. Data sets used in the dashboard can either be copied as well (explicite) or
     //! only the relative path is stored
     //!
-    void save();
+    void save(bool _forceDialog=false);
+    void autoSave(xVDashBoard *pDashBoard);
     //!
     //! \brief load
     //! restores a saved dashboard
     //!
-    void load();
+    void load(QString fname="");
     void verify();
     //!
     //! \brief step
@@ -108,12 +87,17 @@ protected slots:
     //! \param verbose
     //!
     void reset(bool verbose=true);
+    void stop();
+    void compile();
+    void closeDashboard();
     void snapToGrid(xVObj_Basics* pVObj=nullptr);
     xVObj_Basics* baseObjFromId(const QString&);
     void deselectAll();
     void activateNext();
+    void activatePrev();
     void dispMemoryConsumption();
     void rDblClickInScene();
+    void createDashboard();
 
 signals:
     void KSignal(const SIG_TYPE& t,void *pData=nullptr);
@@ -127,16 +111,9 @@ protected:
 
 private:
     Ui::xVTKDlg *ui;
-
-    bool _inConnectorSet = false;
-    bool _paramInConnectorSet = false;
-    bool _outConnectorSet = false;
-    xVObj_Basics* pInEItem = nullptr;
-    xVObj_Basics* pOutEItem = nullptr;
-
     xVVisMainWin *pVisMainWin=nullptr;
-    bool _inStepMode = false;
-    xVObj_Basics* pCurrentStepObj = nullptr;
-    long _passCount = 0;
+    xVSessionDlg *pSessionDlg=nullptr;
+
+    QSoundEffect *pErrorSoundEffect,*pWarnSoundEffect;
 };
 #endif // XVTKDLG_H

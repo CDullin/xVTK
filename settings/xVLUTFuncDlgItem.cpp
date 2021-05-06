@@ -9,6 +9,7 @@
 
 xVLUTFuncDlgItem::xVLUTFuncDlgItem(QWidget *parent):QLabel(parent)
 {
+    setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     setGeometry(0,0,100,20);
     generatePixmap();
 }
@@ -82,7 +83,6 @@ void xVLUTFuncDlgItem::mouseDoubleClickEvent(QMouseEvent *event)
 
 void xVLUTFuncDlgItem::resizeEvent(QResizeEvent *event)
 {
-    QSize size=event->size();
-    setGeometry(0,0,size.width(),size.height());
+    QLabel::resizeEvent(event);
     generatePixmap();
 }
