@@ -61,7 +61,8 @@ void xVGenVisObj::generateShape()
     rg.setColorAt(1,QColor(0,10,10));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

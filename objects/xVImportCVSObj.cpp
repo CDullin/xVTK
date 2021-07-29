@@ -3,6 +3,7 @@
 xVImportCVSObj::xVImportCVSObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_CVS;
+    _description="Imports a table in *.csv format";
     _paramMp["file name"]._id=1;
     //_paramMp["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,::_settings["last cvs file"]._value.toString()));
     _paramMp["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,"/home/heimdall/development/sample_data/Madlaine.csv"));

@@ -80,9 +80,8 @@ void xVFontDefinitionDlg::displayFont()
         if ((*pParamMpRef)["shadow"]._value.toBool())
         {
             pain.setPen((*pParamMpRef)["shadow color"]._value.value<QColor>());
-            int offsetX = (*pParamMpRef)["shadow offset X [px]"]._value.value<xLimitedInt>()._value;
-            int offsetY = (*pParamMpRef)["shadow offset Y [px]"]._value.value<xLimitedInt>()._value;
-            pain.drawText(_boundingRect.translated(offsetX,offsetY),_alignment,ui->pExampleTxtLEdit->text());
+            QPoint offset = (*pParamMpRef)["shadow offset [pnt]"]._value.value<QPoint>();
+            pain.drawText(_boundingRect.translated(offset.x(),offset.y()),_alignment,ui->pExampleTxtLEdit->text());
         }
 
         QColor color((*pParamMpRef)["color"]._value.value<QColor>());

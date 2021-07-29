@@ -4,11 +4,15 @@
 xVPolygonizationFilterObj::xVPolygonizationFilterObj(const QString& txt):xVGenFilterObj(txt)
 {
     _type = xVOT_POLYGONIZATION;
+    _description="Performs polygonization of a volume data set";
     _paramMp["threshold"]._id=1;
     _paramMp["threshold"]._value=QVariant::fromValue(xLimitedDouble(12000,-100000,100000,10));
     pProgObserver = new xVProgressObserver(this);
     connect(pProgObserver,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+
     _outputParamMp["mesh"]._value=QVariant::fromValue((vtkPolyDataMapperPtr) 0);
+
+    _inputRequirements << (QStringList() << "volume" << "volume data");
 }
 
 xVPolygonizationFilterObj::xVPolygonizationFilterObj(QDataStream &d):xVGenFilterObj(d)

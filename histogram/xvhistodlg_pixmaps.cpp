@@ -155,73 +155,76 @@ xVHISTO_PIXMAP xVHistoDlg::generatePixmap(const float& _dMin,const float& _dMax,
     res._dispMax=_dMax;
     res._dispMin=_dMin;
 
-    double mi = pData->info()._dataTypeMin;
-    double ma = pData->info()._dataTypeMax;
-
-    // calculate display version of the histogram
-    double *dispHisto=(double*)malloc(w*sizeof(double));
-    memset(dispHisto,0,w*sizeof(double));
-    double maxBin=0;
-    double swx,ewx,rel,sproc,eproc;
-
-    for (int x=0;x<w-1;++x)
+    if (pData)
     {
-        rel = double(x)/double(w);
-        rel = rel*(_dMax-_dMin)+_dMin;
-        rel = (rel-mi)/(ma-mi)*(float)(pData->info()._binCount-1);
-        swx = rel;
-        rel = double(x+1)/double(w);
-        rel = rel*(_dMax-_dMin)+_dMin;
-        rel = (rel-mi)/(ma-mi)*(float)(pData->info()._binCount-1);
-        ewx = max(swx+1,rel);
 
-        // 1-proc at starting point, proc at end point, inbetween 1
-        sproc=(1.0-swx/floor(swx));
-        eproc=ewx/floor(ewx);
-        dispHisto[x]+=sproc*pData->info()._bins[(int)floor(swx)];
-        dispHisto[x]+=eproc*pData->info()._bins[(int)ceil(ewx)];
+        double mi = pData->info()._dataTypeMin;
+        double ma = pData->info()._dataTypeMax;
 
-        double weightSum=sproc+eproc;
+        // calculate display version of the histogram
+        double *dispHisto=(double*)malloc(w*sizeof(double));
+        memset(dispHisto,0,w*sizeof(double));
+        double maxBin=0;
+        double swx,ewx,rel,sproc,eproc;
 
-        for (long j=floor(swx)+1;j<ceil(ewx)-1;++j)
+        for (int x=0;x<w-1;++x)
         {
-            dispHisto[x]+=pData->info()._bins[j];
-            ++weightSum;
-        }
-        weightSum>0 ? dispHisto[x]/=weightSum : dispHisto[x]=0;
-        if (_paramMp["histogram mode"]._value.toString()=="logarithmic")
-        {
-            dispHisto[x]>0 ? dispHisto[x]=log(dispHisto[x]) : dispHisto[x]=0;
-        }
-        maxBin=max(maxBin,dispHisto[x]);
-    }
+            rel = double(x)/double(w);
+            rel = rel*(_dMax-_dMin)+_dMin;
+            rel = (rel-mi)/(ma-mi)*(float)(pData->info()._binCount-1);
+            swx = rel;
+            rel = double(x+1)/double(w);
+            rel = rel*(_dMax-_dMin)+_dMin;
+            rel = (rel-mi)/(ma-mi)*(float)(pData->info()._binCount-1);
+            ewx = max(swx+1,rel);
 
-    //logarithmic
-    QPen p(_paramMp["histogram color"]._value.value<QColor>());
-    QPainter pain(&res.pix);
-    pain.setPen(p);
-    double val,col[3];
-    for (int x=0;x<w;++x)
-        if (dispHisto[x]>0)
-        {
-            if (_paramMp["histogram colorization"]._value.toBool() && _mode==HDM_LUT)
+            // 1-proc at starting point, proc at end point, inbetween 1
+            sproc=(1.0-swx/floor(swx));
+            eproc=ewx/floor(ewx);
+            dispHisto[x]+=sproc*pData->info()._bins[(int)floor(swx)];
+            dispHisto[x]+=eproc*pData->info()._bins[(int)ceil(ewx)];
+
+            double weightSum=sproc+eproc;
+
+            for (long j=floor(swx)+1;j<ceil(ewx);++j)
             {
-                rel = double(x)/double(w);
-                rel = rel*(_dMax-_dMin)+_dMin;
-                swx = rel;
-                rel = double(x+1)/double(w);
-                rel = rel*(_dMax-_dMin)+_dMin;
-                ewx = max(swx+1,rel);
-                val=(swx+ewx)/2.0;
-                colorTransFuncRef->GetColor(val,col);
-                pain.setPen(QColor::fromRgbF(col[0],col[1],col[2]));
+                dispHisto[x]+=pData->info()._bins[j];
+                ++weightSum;
             }
-            pain.drawLine(x,h-1,x,h-dispHisto[x]/maxBin*h);
+            weightSum>0 ? dispHisto[x]/=weightSum : dispHisto[x]=0;
+            if (_paramMp["histogram mode"]._value.toString()=="logarithmic")
+            {
+                dispHisto[x]>0 ? dispHisto[x]=log(dispHisto[x])/log(10.0) : dispHisto[x]=0;
+            }
+            maxBin=max(maxBin,dispHisto[x]);
         }
-    pain.end();
 
-    res._valMin=0;
-    res._valMax=maxBin;
+        //logarithmic
+        QPen p(_paramMp["histogram color"]._value.value<QColor>());
+        QPainter pain(&res.pix);
+        pain.setPen(p);
+        double val,col[3];
+        for (int x=0;x<w;++x)
+            if (dispHisto[x]>0)
+            {
+                if (_paramMp["histogram colorization"]._value.toBool() && _mode==HDM_LUT)
+                {
+                    rel = double(x)/double(w);
+                    rel = rel*(_dMax-_dMin)+_dMin;
+                    swx = rel;
+                    rel = double(x+1)/double(w);
+                    rel = rel*(_dMax-_dMin)+_dMin;
+                    ewx = max(swx+1,rel);
+                    val=(swx+ewx)/2.0;
+                    colorTransFuncRef->GetColor(val,col);
+                    pain.setPen(QColor::fromRgbF(col[0],col[1],col[2]));
+                }
+                pain.drawLine(x,h-1,x,h-dispHisto[x]/maxBin*h);
+            }
+        pain.end();
 
+        res._valMin=0;
+        res._valMax=maxBin;
+    }
     return res;
 }

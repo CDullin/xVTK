@@ -3,6 +3,7 @@
 xVTrafficLightObj::xVTrafficLightObj(QString txt):xVObj_Basics()
 {
     _type = xVOT_TRAFFIC_LIGHT;
+    _description="Displays status in three categories";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     _paramMp["traffic light status"]._id=2;

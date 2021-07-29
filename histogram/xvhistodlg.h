@@ -25,6 +25,13 @@ class xVHistoDlg : public QDialog
     Q_OBJECT
 public:
 
+    enum HISTO_VALUE_MODE
+    {
+        HVM_RELATIVE,
+        HVM_ABSOLUTE,
+        HVM_LOG
+    };
+
     enum HISTO_DLG_MODE
     {
         HDM_WINDOW_LEVEL    =0x00,
@@ -46,7 +53,12 @@ public:
     explicit xVHistoDlg(QWidget *parent = nullptr);
     ~xVHistoDlg();
     xVHISTO_PIXMAP generatePixmap(const float& _dMin,const float& _dMax,const int& w,const int& h);
+    xVHISTO_PIXMAP* all(){return &_all;}
+    xVHISTO_PIXMAP* zoom(){return &_zoom;}
     void setMode(const HISTO_DLG_MODE& m);
+    void setValueMode(const HISTO_VALUE_MODE& m);
+    HISTO_VALUE_MODE valueMode(){return _valueMode;}
+    xVHisto* histo(){return pData;}
     void setHisto(xVHisto* h){pData=h;}
     void setOpacityFunc(vtkPiecewiseFunctionPtr f);
     void setColorTransFunc(vtkColorTransferFunctionPtr f);
@@ -97,6 +109,7 @@ protected:
     xVHistoPixmapItem *pColorBarPixItem = nullptr;
     xVHistoPixmapItem *pZoomColorBarPixItem = nullptr;
     HISTO_DLG_MODE _mode=HDM_OPACITY;
+    HISTO_VALUE_MODE _valueMode=HVM_RELATIVE;
     xVHisto* pData=nullptr;
     QVBoxLayout *pVBLayout;
     QHBoxLayout *pHBLayout;

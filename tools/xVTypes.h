@@ -17,6 +17,7 @@
 #include <vtkPiecewiseFunction.h>
 #include <vtkColorTransferFunction.h>
 #include <vtkTextProperty.h>
+#include <vtkImagePlaneWidget.h>
 
 #include <QSerialPort>
 #include <QDataStream>
@@ -28,6 +29,7 @@ class xVAbstractBaseObj;
 //void saveToStream(QDataStream &d,const QVariant& v);
 QString objName2objId(const QString& name);
 xVAbstractBaseObj* objId2objPtr(const QString& id);
+void addToList(QStringList& sl,const QStringList& s,bool _caseSensitive=false);
 
 enum VARIANT_TYPES
 {
@@ -122,6 +124,7 @@ enum xVO_TYPE
     xVOT_IMAGE_STACK        = 0x00000104,
     xVOT_CVS                = 0x00000105,
     xVOT_PYLON_CAMERA       = 0x00000106,
+    xVOT_MEASUREMENT_REGION = 0x00000201,
     xVOT_OUTPUT             = 0x00000400,
     xVOT_2D_VIEW            = 0x00000401,
     xVOT_3D_VIEW            = 0x00000402,
@@ -340,6 +343,10 @@ QDataStream &operator<<(QDataStream &out, const xLimitedDouble &myObj);
 QDataStream &operator>>(QDataStream &in, xLimitedDouble &myObj);
 QDataStream &operator<<(QDataStream &out, const xParamMap &myObj);
 QDataStream &operator>>(QDataStream &in, xParamMap &myObj);
+QDataStream &operator<<(QDataStream &out, const vtkImageDataPtr &myObj);
+QDataStream &operator>>(QDataStream &in, vtkImageDataPtr &myObj);
+QDataStream &operator<<(QDataStream &out, const vtkVolumePtr &myObj);
+QDataStream &operator>>(QDataStream &in, vtkVolumePtr &myObj);
 
 class xVObj_Basics;
 
@@ -358,6 +365,7 @@ public:
     xVObj_Basics* pOutEItem = nullptr;
     bool _inStepMode = false;
     xVObj_Basics* pCurrentStepObj = nullptr;
+    xVObj_Basics* pPrevStepObj = nullptr;
     long _passCount = 0;
 
     QString _name;
@@ -371,6 +379,7 @@ public:
     bool _explicit = false;
 
     QDateTime _lastAutoSaved;
+
 };
 
 extern QMap<QString,LIMITS> _limitMp;

@@ -13,6 +13,7 @@
 #include <vtkRenderer.h>
 #include <vtkRenderWindow.h>
 #include <vtkImageMapToColors.h>
+#include <vtkLegendScaleActor.h>
 
 class xV2DVisObj:public xVGenVisObj
 {
@@ -29,8 +30,10 @@ protected:
 
     void run_volume_data();
     void run_image_data();
+    void run_cut_plane();
     void update_volume_data();
     void update_image_data();
+    void update_cut_plane();
 
     vtkImageViewer2 *pImgViewer = nullptr;
     vtkMatrix4x4* pSliceOrientation = nullptr;
@@ -43,6 +46,7 @@ protected:
     vtkRenderer* pRenderer=nullptr;
     vtkRenderWindow *pRenderWin=nullptr;
     vtkRenderWindowInteractor *pRenderWindowInteractor=nullptr;
+    vtkLegendScaleActor *pScaleBar = nullptr;
 };
 
 

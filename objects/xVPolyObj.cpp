@@ -5,6 +5,7 @@
 xVPolyObj::xVPolyObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_MESH;
+    _description="Imports typical mesh files";
     _paramMp["file name"]._id = 1;
     _paramMp["file name"]._value = QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,"no file"));
     _paramMp["test"]._id=2;
@@ -12,11 +13,16 @@ xVPolyObj::xVPolyObj(const QString& txt):xVGenImpObj(txt)
 
     pProgObserver = new xVProgressObserver(this);
     connect(pProgObserver,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+
+    _outputParamMp["mesh"]._value = QVariant::fromValue((vtkPolyDataMapperPtr)0);
+    _outputParamMp["mesh"]._id=0;
 }
 
 xVPolyObj::xVPolyObj(QDataStream &d):xVGenImpObj(d)
 {
     _type = xVOT_MESH;
+    _outputParamMp["mesh"]._value = QVariant::fromValue((vtkPolyDataMapperPtr)0);
+    _outputParamMp["mesh"]._id=0;
 }
 
 void xVPolyObj::reset()

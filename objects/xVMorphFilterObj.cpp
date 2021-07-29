@@ -3,6 +3,7 @@
 xVMorphFilterObj::xVMorphFilterObj(const QString& txt):xVGenFilterObj(txt)
 {
     _type = xVOT_MORPH_FILTER;
+    _description="Performs typical morphological filters";
 }
 
 xVMorphFilterObj::xVMorphFilterObj(QDataStream& d):xVGenFilterObj(d)

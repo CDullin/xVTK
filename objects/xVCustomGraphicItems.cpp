@@ -38,6 +38,11 @@ void xRectItem::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
     //QGraphicsRectItem::mouseMoveEvent(event);
 }
 
+void xGraphicsPathItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
+{
+    emit hoverEnter();
+}
+
 void xEllipseItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
 {
     _hovered = true;
@@ -47,6 +52,7 @@ void xEllipseItem::hoverEnterEvent(QGraphicsSceneHoverEvent *event)
     update();
 
     setCursor(Qt::PointingHandCursor);
+    emit hoverEnter();
 
     return QGraphicsEllipseItem::hoverEnterEvent(event);
 }
@@ -172,3 +178,29 @@ QRectF xGroupItem::boundingRect() const
     return _boundingRect;
 }
 
+xGroupItem::xGroupItem(QGraphicsItem *parent):QObject(),QGraphicsItemGroup(parent)
+{
+};
+
+void xGroupItem::setBoundingRectSize(QRectF _br){_boundingRect=_br;}
+
+
+void xGroupItem::mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent)
+{
+    QGraphicsItemGroup::mouseMoveEvent(mouseEvent);
+    if (mouseEvent->pos()!=mouseEvent->lastPos())
+    {
+        emit moved();
+    }
+}
+
+void xGroupItem::mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent)
+{
+    QGraphicsItemGroup::mouseReleaseEvent(mouseEvent);
+    if (mouseEvent->button()==Qt::LeftButton) emit placed();
+}
+
+void xGroupItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
+{
+    if (event->button()==Qt::RightButton) emit selected();
+}

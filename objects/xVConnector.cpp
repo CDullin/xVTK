@@ -7,6 +7,58 @@ xConnector::xConnector(xVObj_Basics* o):QObject(){
     pBaseObj=o;
     _id="CON"+QDateTime::currentDateTime().toString("yyMMddhhmmsszzz")+QString("_%1").arg(::_objIDCount++);
     connect(this,SIGNAL(KSignal(const SIG_TYPE&,void*)),o,SIGNAL(KSignal(const SIG_TYPE&,void*)));
+    updateToolTip();
+}
+
+xVObj_Basics* xConnector::baseObj(){return pBaseObj;}
+bool xConnector::isEnabled(){return _enabled;}
+QList <xVObj_Basics*>* xConnector::connectedObjects(){return &_connectToLst;}
+xCONNECTOR_TYPE xConnector::type(){return _type;}
+QGraphicsItemGroup *xConnector::item(){return pGrpItem;}
+void xConnector::setActivated(bool b){pEllipseItem->setActivated(b);}
+bool xConnector::isActivated(){return pEllipseItem->isActivated();}
+QPointF xConnector::pos(){
+    QPointF p(15,0);
+    switch (_type)
+    {
+    case xCT_INPUT: p=QPointF(-15,0);break;
+    case xCT_OUTPUT: p=QPointF(15,0);break;
+    case xCT_PARAMETER: p=QPointF(0,0);break;
+    default:
+        break;
+    }
+    return pEllipseItem->mapToScene(p);}
+QString xConnector::id(){return _id;}
+QStringList* xConnector::objIDs(){return &_idLst;}
+
+void xConnector::updateToolTip()
+{
+    if (_type==xCT_OUTPUT)
+    {
+        if (pBaseObj && pEllipseItem)
+        {
+            QString param = pBaseObj->outputParamMap()->keys().join("\n");
+            param.isEmpty() ? pEllipseItem->setToolTip("") : pEllipseItem->setToolTip("output:\n"+param);
+        }
+    }
+    else
+    {
+        if (_type==xCT_INPUT && pBaseObj && !pBaseObj->inputRequirements()->isEmpty())
+        {
+            QString txt="input:\n";
+            for (int i=0;i<pBaseObj->inputRequirements()->count();++i)
+            {
+                QString line = QString("[%1] ").arg(i)+pBaseObj->inputRequirements()->at(i).join(" + ")+"\n";
+                txt+=line;
+            }
+            txt.remove(-1,1);
+            if (pEllipseItem) pEllipseItem->setToolTip(txt);
+        }
+        else
+        {
+            if (pEllipseItem) pEllipseItem->setToolTip("");
+        }
+    }
 }
 
 void xConnector::generateShape()
@@ -35,6 +87,7 @@ void xConnector::generateShape()
         pGrpItem->setAcceptedMouseButtons(Qt::AllButtons);
         pGrpItem->setHandlesChildEvents(false);
         connect(pEllipseItem,SIGNAL(activated()),this,SLOT(connectorActivated()));
+        connect(pEllipseItem,SIGNAL(hoverEnter()),this,SLOT(updateToolTip()));
     }
     switch (_type)
     {
@@ -72,12 +125,14 @@ void xConnector::setToInput()
 {
     _type = xCT_INPUT;
     generateShape();
+    updateToolTip();
 }
 
 void xConnector::setToParamInput()
 {
     _type = xCT_PARAMETER;
     generateShape();
+    updateToolTip();
 }
 
 void xConnector::connectorActivated()
@@ -89,10 +144,19 @@ void xConnector::setToOutput()
 {
     _type = xCT_OUTPUT;
     generateShape();
+    updateToolTip();
 }
 
-void xConnector::addConObject(xVObj_Basics* pVObj){_connectToLst.append(pVObj);emit KSignal(ST_OBJ_ADDED_TO_CONNECTOR,this);}
-void xConnector::removeConObj(xVObj_Basics* pVObj){_connectToLst.removeAll(pVObj);emit KSignal(ST_OBJ_REMOVED_FROM_CONNECTOR,this);}
+void xConnector::addConObject(xVObj_Basics* pVObj){
+    _connectToLst.append(pVObj);
+    emit KSignal(ST_OBJ_ADDED_TO_CONNECTOR,this);
+    updateToolTip();
+}
+void xConnector::removeConObj(xVObj_Basics* pVObj){
+    _connectToLst.removeAll(pVObj);
+    emit KSignal(ST_OBJ_REMOVED_FROM_CONNECTOR,this);
+    updateToolTip();
+}
 bool xConnector::connectedTo(xVObj_Basics* pVObj){return _connectToLst.contains(pVObj);}
 
 xConnector::xConnector(xVObj_Basics* pVobj,QDataStream &d):QObject()
@@ -109,7 +173,7 @@ xConnector::xConnector(xVObj_Basics* pVobj,QDataStream &d):QObject()
         _idLst.append(id);
     }
     generateShape();
-
+    updateToolTip();
     connect(this,SIGNAL(KSignal(const SIG_TYPE&,void* )),pVobj,SIGNAL(KSignal(const SIG_TYPE&,void* )));
 }
 

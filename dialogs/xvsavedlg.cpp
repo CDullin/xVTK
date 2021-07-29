@@ -23,11 +23,13 @@ void xVSaveDlg::browseFolder()
 
     if (!_path.isEmpty())
     {
-        if (info.exists() && QMessageBox::question(0,"Warning","The folder already contains a dashboard. If you continue the data will be overwritten.")==QMessageBox::Yes)
+        if (!info.exists() ||
+            (info.exists() &&
+             QMessageBox::question(0,"Warning","The folder already contains a dashboard. If you continue the data will be overwritten.")==QMessageBox::Yes))
         {
             QFileInfo info(_path);
             ::_settings["export dashboard path"]._value = QString(info.absoluteFilePath()+"/..");
-            ui->pFolderLEdit->setText(info.path());
+            ui->pFolderLEdit->setText(info.absoluteFilePath());
         }
     }
 }

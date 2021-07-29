@@ -12,6 +12,7 @@ xVLSIFilterObj::xVLSIFilterObj(const QString& txt):xVGenFilterObj(txt)
 {
     // split parameter per filter
     _type=xVOT_LSI_FILTER;
+    _description="Performs typical local filter (median, gaussian,\nsobel) of either 2D or 3D data sets";
     _paramMp["filter type"]._value="median";
     _paramMp["filter type"]._id=1;
     _optionLsts["filter type"] << "median" << "gaussian" << "sobel";
@@ -24,8 +25,14 @@ xVLSIFilterObj::xVLSIFilterObj(const QString& txt):xVGenFilterObj(txt)
 
     _outputParamMp["image"]._id=1;
     _outputParamMp["image"]._value = QVariant::fromValue((vtkImageDataPtr)0);
+    _outputParamMp["volume object"]._id=2;
+    _outputParamMp["volume object"]._value = qulonglong(0);
+
     pProgObserver = new xVProgressObserver(this);
     connect(pProgObserver,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+
+    _inputRequirements << (QStringList() << "image");
+    _inputRequirements << (QStringList() << "volume");
 }
 xVLSIFilterObj::xVLSIFilterObj(QDataStream &d):xVGenFilterObj(d)
 {

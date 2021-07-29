@@ -59,6 +59,7 @@ xVObj_Basics::xVObj_Basics():xVAbstractBaseObj(){
 xVObj_Basics::xVObj_Basics(QDataStream& d):xVAbstractBaseObj(d)
 {
     quint64 _pos = d.device()->pos();
+    d >> _description;
     d >> _maxInput >> _maxOutput >> _status;
 
     quint16 v; d >> v;
@@ -68,6 +69,14 @@ xVObj_Basics::xVObj_Basics(QDataStream& d):xVAbstractBaseObj(d)
         QPointF pnt; d >> pnt;
         pCon->item()->setPos(pnt);
         _connectorLst.append(pCon);
+    }
+
+    d >> v;
+    QStringList l;
+    for (int i=0;i<v;++i)
+    {
+        d >> l;
+        _inputRequirements.append(l);
     }
 
     _type=xVOT_INVALID;
@@ -106,6 +115,16 @@ xVObj_Basics::xVObj_Basics(QDataStream& d):xVAbstractBaseObj(d)
     connect(pSelectionTimer,SIGNAL(timeout()),paAnimation2,SLOT(start()));
 
     setStatus(OS_UPDATE_NEEDED);
+}
+
+void xVObj_Basics::updateConnectedObjects()
+{
+    for (int i=0;i<_connectorLst.count();++i)
+        if (_connectorLst[i]->type()==xCT_OUTPUT)
+        {
+            for (int j=0;j<_connectorLst[i]->connectedObjects()->count();++j)
+                _connectorLst[i]->connectedObjects()->at(j)->paramModified("");
+        }
 }
 
 void xVObj_Basics::run()
@@ -150,6 +169,7 @@ xConnector* xVObj_Basics::activeConnector()
 void xVObj_Basics::save(QDataStream &d, bool _explicit)
 {
     xVAbstractBaseObj::save(d,_explicit);
+    d << _description;
     d << _maxInput << _maxOutput << OS_UPDATE_NEEDED;
     d << (quint16)_connectorLst.count();
     for (int i=0;i<_connectorLst.count();++i)
@@ -157,6 +177,9 @@ void xVObj_Basics::save(QDataStream &d, bool _explicit)
         _connectorLst[i]->save(d);
         d << _connectorLst[i]->item()->pos();
     }
+    d << (quint16)_inputRequirements.count();
+    for (int i=0;i<_inputRequirements.count();++i)
+        d << _inputRequirements[i];
 }
 
 void xVObj_Basics::paramModified(const QString& txt) {
@@ -251,6 +274,7 @@ xVObj_Basics::~xVObj_Basics()
 {
     if (pGrpItem)
     {
+        pSelectionTimer->stop();
         pGrpItem->scene()->removeItem(pGrpItem);
         /*
         delete pGrpItem;

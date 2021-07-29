@@ -38,7 +38,8 @@ public:
     xConnector* inputObj(){return pInObj;}
     xConnector* outputObj(){return pOutObj;}
     virtual void setParamSelected(bool b) override;
-    virtual void paramModified(const QString& txt) override {
+    virtual void paramModified(const QString& txt="") override {
+        QString calledWithTxt=txt;
         update();
     }
     virtual void save(QDataStream&, bool _explicit=false) override;
@@ -51,10 +52,12 @@ signals:
     void parameterModified();
 
 protected slots:
+    void patternTimeOut();
     void updatePath();
     void nodeMoved(QPointF,const int&,xVHistoNodeItem*);
 
 protected:
+    void generatePattern();
     QGraphicsPathItem *generateArrow();
     void createPath();
     void addNode(QPointF p,int i,xVHistoNodeItem::HNI_MODE m);
@@ -62,6 +65,7 @@ protected:
     xConnector *pInObj=nullptr,*pOutObj=nullptr;
     xGroupItem *pGrpItem=nullptr;
     QGraphicsPathItem *pPathItem=nullptr;
+    QGraphicsPathItem *pPathStartItem=nullptr;
     bool _paramConnection = false;
     QString _id;
     QList <QGraphicsPathItem*> _arrowLst;
@@ -79,6 +83,10 @@ protected:
 
     QPointF oldIPnt,oldOPnt;
     bool _dontResetControlPoints = false;
+
+    long _patternId=0;
+    QTimer _patternTimer;
+    QPen _linePen;
 };
 
 #endif // XVCONNECTOROBJ_H

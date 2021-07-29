@@ -3,6 +3,7 @@
 xVStartObj::xVStartObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_START;
+    _description="Where everything starts";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     _maxOutput=1000;
@@ -69,7 +70,8 @@ void xVStartObj::generateShape()
     rg.setColorAt(1,QColor(255,255,255));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

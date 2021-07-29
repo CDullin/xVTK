@@ -1,0 +1,31 @@
+// bug list
++ check io workspace
++ user defined input of multiple objects
+    - sort table according objects
+    - insert labels in table
+    - add properties of same name but different objects
++ histomode does not changes axis label
+    - absolute mode find maximum in zoom mode
+    - implement log10 mode
++ change interactor style 2D view
+
+
+// 3D interactor
+- left mouse rotate x-y plane
+- shift left mouse rotate z axis
+- right mouse move x-y plane
+- shift right mouse move z axis
+- wheel zoom in out
+- ctrl left mouse context menu
+
+// keys
+alt+a group
+alt+q single
+alt+s screen shot
+alt+d defined rotation
+alt+r reset camera
+
+// conext menu
+- list for grouping the actors + defined movement
+- screen shot
+- camera / defined view angles

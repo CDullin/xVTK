@@ -75,7 +75,17 @@ void xVOpacityFuncDlgItem::generatePixmap()
                 }
     }
 
-    if (!pVObj || !pVObj->histo()) return;
+    if (!pVObj || !pVObj->histo() || pVObj->histo()->info()._count==0)
+    {
+        QPixmap pix(width(),height());
+        pix.fill(Qt::red);
+        QPainter pain(&pix);
+        QPen pen(Qt::black);
+        pain.drawText(QRectF(0,0,width(),height()),Qt::AlignCenter,"no input data");
+        pain.end();
+        setPixmap(pix);
+    }
+    else
 
     setPixmap(xVHistoDlg::bar(
                   xVHistoDlg::HDM_OPACITY,

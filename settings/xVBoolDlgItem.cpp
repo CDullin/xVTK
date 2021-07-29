@@ -1,5 +1,4 @@
 #include "xVBoolDlgItem.h"
-#include <QResizeEvent>
 #include <QHBoxLayout>
 
 xVBoolDlgItem::xVBoolDlgItem(QWidget *parent):QWidget(parent)
@@ -31,13 +30,3 @@ void xVBoolDlgItem::setCondition(const bool& b)
 {
      b ? pRBtn0->setChecked(true) : pRBtn1->setChecked(true);
 }
-
-/*
-void xVBoolDlgItem::resizeEvent(QResizeEvent *event)
-{
-    QSize size=event->size();
-    setGeometry(0,0,size.width(),size.height());
-    pRBtn0->setGeometry(5,0,size.width()/2-10,size.height());
-    pRBtn1->setGeometry(size.width()/2+5,0,size.width()/2-10,size.height());
-}
-*/

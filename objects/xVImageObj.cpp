@@ -13,6 +13,7 @@
 xVImageObj::xVImageObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_IMAGE;
+    _description = "Imports a 2D image";
     _paramMp["file name"]._id=1;
     _paramMp["file name"]._value=QVariant::fromValue(xFileName(xFileName::FN_INPUT_FILE,"undefined"));
 

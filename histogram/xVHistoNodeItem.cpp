@@ -22,7 +22,7 @@ xVHistoNodeItem::xVHistoNodeItem(int n,int m,QObject * parent):QObject(parent),Q
 
     QGraphicsDropShadowEffect *pEffect=new QGraphicsDropShadowEffect();
     pEffect->setColor(Qt::black);
-    pEffect->setOffset(3,3);
+    pEffect->setOffset(1,1);
     pEffect->setBlurRadius(1);
 
     setGraphicsEffect(pEffect);

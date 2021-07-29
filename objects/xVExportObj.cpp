@@ -19,9 +19,27 @@
 xVExportObj::xVExportObj(const QString& txt):xVGenVisObj(txt)
 {
     _type = xVOT_EXPORT;
+    _description = "Can export images, meshes and volume data sets";
     _maxInput = 1;
-    _paramMp["file name"]._id=1;
+    _paramMp["export type"]._id=1;
+    addToList(_optionLsts["export type"],QStringList() << "single file" << "file sequence");
+    _paramMp["export type"]._value="single file";
+
+    _paramMp["file name"]._id=10;
     _paramMp["file name"]._value = QVariant::fromValue(xFileName(xFileName::FN_OUTPUT_FILE,""));
+    _paramMp["file name"]._subGrp = "single file";
+
+    _paramMp["folder name"]._id=20;
+    _paramMp["folder name"]._value = QVariant::fromValue(xFileName(xFileName::FN_OUTPUT_DIR,""));
+    _paramMp["folder name"]._subGrp = "file sequence";
+    _paramMp["export file type"]._id=21;
+    addToList(_optionLsts["export file type"],QStringList() << "TIF" << "RAW" << "DCM" << "PNG" << "JPG" << "BMP" << "MHD" << "MHA");
+    _paramMp["export file type"]._value = "TIF";
+    _paramMp["export file type"]._subGrp = "file sequence";
+
+    _inputRequirements << (QStringList() << "image");
+    _inputRequirements << (QStringList() << "volume");
+    _inputRequirements << (QStringList() << "mesh");
 }
 
 xVExportObj::xVExportObj(QDataStream &d):xVGenVisObj(d)

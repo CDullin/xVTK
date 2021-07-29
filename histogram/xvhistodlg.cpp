@@ -16,9 +16,9 @@ xVHistoDlg::xVHistoDlg(QWidget *parent) :
     QDialog(parent)
 {
     setWindowTitle("xVTK - histogram");
-//    if (QFileInfo("xVHistoSettings.dat").exists()) loadSettings();
-//    else
-//    {
+    if (QFileInfo("xVHistoSettings.dat").exists()) loadSettings();
+    else
+    {
         _paramMp["live mode"]._id=1;
         _paramMp["live mode"]._value=true;
         _paramMp["histogram color"]._id=2;
@@ -47,7 +47,7 @@ xVHistoDlg::xVHistoDlg(QWidget *parent) :
         _paramMp["histogram mode"]._value="relative";
         _paramMp["histogram colorization"]._id=14;
         _paramMp["histogram colorization"]._value=true;
-//    }
+    }
 
     pVBLayout = new QVBoxLayout(this);
     pHBLayout = new QHBoxLayout(this);
@@ -266,7 +266,7 @@ void xVHistoDlg::reject()
     }
         break;
     }
-
+    saveSettings();
     return QDialog::reject();
 }
 
@@ -287,7 +287,7 @@ void xVHistoDlg::updateView()
 {
     pHistoGV->setBackgroundBrush(QBrush(_paramMp["background color"]._value.value<QColor>()));
     // generate two pixmaps and the coordinate axis
-    if (pData)                       
+    if (pData && pData->info()._count>0)
     {
         double w = pHistoGV->width()*.8;
         double h = pHistoGV->height()*.8;
@@ -299,6 +299,7 @@ void xVHistoDlg::updateView()
         if (!pAllHistoPixItem)
         {
             pAllHistoPixItem = new xVHistoPixmapItem(this);
+            pAllHistoPixItem->setProperty("title","all");
             connect(pAllHistoPixItem,SIGNAL(cursorPos(QPointF)),this,SLOT(dispCursorPos(QPointF)));
             connect(pAllHistoPixItem,SIGNAL(dblClick(QPointF)),this,SLOT(dblClickInAll(QPointF)));
             pHistoGV->scene()->addItem(pAllHistoPixItem);
@@ -341,6 +342,7 @@ void xVHistoDlg::updateView()
         {
             _zoom = generatePixmap(pData->info()._minVal,pData->info()._maxVal,w*0.95,h*0.25);
             pZoomHistoPixItem = new xVHistoPixmapItem(this);
+            pZoomHistoPixItem->setProperty("title","zoom");
             connect(pZoomHistoPixItem,SIGNAL(cursorPos(QPointF)),this,SLOT(dispCursorPos(QPointF)));
             connect(pZoomHistoPixItem,SIGNAL(dblClick(QPointF)),this,SLOT(dblClickInZoom(QPointF)));
             pHistoGV->scene()->addItem(pZoomHistoPixItem);
@@ -475,11 +477,25 @@ void xVHistoDlg::updateView()
             updateOpacityFunc();
         }
 
+
+        switch (_optionLsts["histogram mode"].indexOf(_paramMp["histogram mode"]._value.toString()))
+        {
+        case 0 : _valueMode = HVM_RELATIVE; break;
+        case 1 : _valueMode = HVM_LOG; break;
+        case 2 : _valueMode = HVM_ABSOLUTE; break;
+        }
+
         pHorAllAxis->updateAxis();
         pHorZoomAxis->updateAxis();
         pVerAllAxis->updateAxis();
         pVerZoomAxis->updateAxis();
     }
+}
+
+void xVHistoDlg::setValueMode(const HISTO_VALUE_MODE &m)
+{
+    _valueMode=m;
+    updateView();
 }
 
 void xVHistoDlg::setMode(const HISTO_DLG_MODE& m)

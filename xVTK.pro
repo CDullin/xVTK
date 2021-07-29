@@ -9,6 +9,10 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    3dview/xV3DRenderWindowInteractor.cpp \
+    3dview/xV3DVisObj.cpp \
+    3dview/xVDefine3DTransformationToolWdgt.cpp \
+    3dview/xVVtkWidget.cpp \
     arduino/xVArduinoComObj.cpp \
     arduino/xVArduinoConnectObj.cpp \
     arduino/xVArduinoThread.cpp \
@@ -34,8 +38,8 @@ SOURCES += \
     histogram/xvhistodlg_tools.cpp \
     main.cpp \
     objects/xV2DVisObj.cpp \
-    objects/xV3DVisObj.cpp \
     objects/xVAbstractBaseObj.cpp \
+    objects/xVBoxObj.cpp \
     objects/xVCallDashboardObj.cpp \
     objects/xVCallExternalObj.cpp \
     objects/xVConnector.cpp \
@@ -57,6 +61,7 @@ SOURCES += \
     objects/xVImportCVSObj.cpp \
     objects/xVLSIFilterObj.cpp \
     objects/xVMathObj.cpp \
+    objects/xVMeasurementRegion.cpp \
     objects/xVMeshVisPropObj.cpp \
     objects/xVMorphFilterObj.cpp \
     objects/xVObjects.cpp \
@@ -89,6 +94,7 @@ SOURCES += \
     settings/xVIntValueDlgItem.cpp \
     settings/xVLUTFuncDlgItem.cpp \
     settings/xVOpacityFuncDlgItem.cpp \
+    settings/xVPointDlgItem.cpp \
     settings/xVSamplePosDlgItem.cpp \
     settings/xVTextPropertyDlgItem.cpp \
     settings/xVUserTableDefinitionDlgItem.cpp \
@@ -118,6 +124,10 @@ SOURCES += \
     xvtkdlg_run.cpp
 
 HEADERS += \
+    3dview/xV3DRenderWindowInteractor.h \
+    3dview/xV3DVisObj.h \
+    3dview/xVDefine3DTransformationToolWdgt.h \
+    3dview/xVVtkWidget.h \
     arduino/xVArduinoComObj.h \
     arduino/xVArduinoConnectObj.h \
     arduino/xVArduinoThread.h \
@@ -139,10 +149,10 @@ HEADERS += \
     histogram/xVHistoVValueAxis.h \
     histogram/xvhistodlg.h \
     objects/xV2DVisObj.h \
-    objects/xV3DVisObj.h \
     objects/xVAbstractBaseObj.h \
     objects/xVArduinoComObj.h \
     objects/xVArduinoConnectObj.h \
+    objects/xVBoxObj.h \
     objects/xVCallDashboardObj.h \
     objects/xVCallExternalObj.h \
     objects/xVCamObj.h \
@@ -168,6 +178,7 @@ HEADERS += \
     objects/xVImportCVSObj.h \
     objects/xVLSIFilterObj.h \
     objects/xVMathObj.h \
+    objects/xVMeasurementRegion.h \
     objects/xVMeshVisPropObj.h \
     objects/xVMorphFilterObj.h \
     objects/xVObjectTypes.h \
@@ -203,6 +214,7 @@ HEADERS += \
     settings/xVIntValueDlgItem.h \
     settings/xVLUTFuncDlgItem.h \
     settings/xVOpacityFuncDlgItem.h \
+    settings/xVPointDlgItem.h \
     settings/xVSamplePosDlgItem.h \
     settings/xVTextPropertyDlgItem.h \
     settings/xVUserTableDefinitionDlgItem.h \
@@ -230,6 +242,7 @@ HEADERS += \
     xvvismainwin.h
 
 FORMS += \
+    3dview/xVDefine3DTransformationToolWdgt.ui \
     dashboard/xVDashboardToolBar.ui \
     dialogs/xvloaddlg.ui \
     dialogs/xvsavedlg.ui \
@@ -261,6 +274,7 @@ LIBS += -L$$PWD/../../../../../opt/pylon/lib/ -lGCBase_gcc_v3_1_Basler_pylon
 LIBS += -L$$PWD/../../../../../opt/pylon/lib/ -lpylonc
 LIBS += -L$$PWD/../../../../../opt/pylon/lib/ -lpylonutility
 LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkCommonCore-8.0
+LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkCommonTransforms-8.0
 LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkIOGeometry-8.0
 LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkIOLegacy-8.0
 LIBS += -L$$PWD/../VTK8-build/lib/ -lvtkCommonExecutionModel-8.0
@@ -321,6 +335,7 @@ LIBS += -lz
 
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/DataModel
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/ExecutionModel
+INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/Transforms
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/System
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Common/Core
@@ -357,6 +372,7 @@ INCLUDEPATH += $$PWD/../VTK8-build/GUISupport/QtOpenGL
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction/Image
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction/Widgets
+INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Interaction/Style
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Imaging/Core
 INCLUDEPATH += $$PWD/../VTK-8.0.1_source/Imaging/General
 
@@ -375,6 +391,7 @@ INCLUDEPATH += $$PWD/session
 INCLUDEPATH += $$PWD/help
 INCLUDEPATH += $$PWD/fuzzy
 INCLUDEPATH += $$PWD/graph
+INCLUDEPATH += $$PWD/3dview
 
 INCLUDEPATH += $$PWD/../../../../../opt/pylon/include
 INCLUDEPATH += $$PWD/../../../../../opt/pylon/include/GenApi
@@ -407,6 +424,7 @@ DEPENDPATH += $$PWD/../VTK8-build
 
 DISTFILES += \
     documents/VTKUsersGuide.pdf \
+    documents/notes \
     images/colormap.png \
     images/seamless-circuit-board.png \
     images/vtk-logo.png

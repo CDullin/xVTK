@@ -11,6 +11,7 @@
 xVVolObj::xVVolObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_VOLUME;
+    _description="Imports typical volume data files";
     _paramMp["volume file type"]._id=1;
     _paramMp["volume file type"]._value="raw";
     _paramMp["file name"]._id=2;
@@ -44,6 +45,14 @@ xVVolObj::xVVolObj(const QString& txt):xVGenImpObj(txt)
     pHisto = new xVHisto(this);
     connect(pProgObserver,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
     connect(pHisto,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+
+    _outputParamMp["volume data"]._id=0;
+    _outputParamMp["volume data"]._value = QVariant::fromValue((vtkImageDataPtr)0);
+    _outputParamMp["dimension"]._id=1;
+    _outputParamMp["dimension"]._value= QVariant::fromValue(x3D_SAMPLE_POS(0,0,0));
+    _outputParamMp["resolution"]._id=2;
+    _outputParamMp["resolution"]._value= QVariant::fromValue(QVector3D(1,1,1));
+
 }
 
 xVVolObj::xVVolObj(QDataStream &d):xVGenImpObj(d)
@@ -54,6 +63,13 @@ xVVolObj::xVVolObj(QDataStream &d):xVGenImpObj(d)
     pHisto = new xVHisto(this);
     connect(pProgObserver,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
     connect(pHisto,SIGNAL(KSignal(const SIG_TYPE&,void*)),this,SIGNAL( KSignal(const SIG_TYPE&,void*)));
+
+    _outputParamMp["volume data"]._id=0;
+    _outputParamMp["volume data"]._value = QVariant::fromValue((vtkImageDataPtr)0);
+    _outputParamMp["dimension"]._id=1;
+    _outputParamMp["dimension"]._value= QVariant::fromValue(x3D_SAMPLE_POS(0,0,0));
+    _outputParamMp["resolution"]._id=2;
+    _outputParamMp["resolution"]._value= QVariant::fromValue(QVector3D(1,1,1));
 }
 
 void xVVolObj::reset()

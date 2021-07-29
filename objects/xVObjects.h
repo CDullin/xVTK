@@ -52,6 +52,7 @@ public:
     void positionChanged(){emit moved();}
     virtual void save(QDataStream&,bool _explicit=false) override;
     virtual void reset(){setStatus(OS_UPDATE_NEEDED);};
+    QList <QStringList> *inputRequirements(){return &_inputRequirements;}
 public slots:
     virtual void paramModified(const QString& txt="") override;
 signals:
@@ -60,18 +61,20 @@ signals:
     void connectorActivated(xVObj_Basics*,xCONNECTOR_TYPE);
     void parameterModified();
 protected slots:
+    void updateDescToolTip(){if (pShapeItem) pShapeItem->setToolTip(_description);}
     void connectorActivated_SLOT(xConnector* pCon,xCONNECTOR_TYPE type)
     {
+        xConnector* pActivateFromCon = pCon;
         emit connectorActivated(this,type);
     }
     virtual void updateTimerTimeOut(){};
 protected:
-
+    void updateConnectedObjects();
     xConnector* connectedToVObjWithType(xVObj_Basics*,const xCONNECTOR_TYPE&);
     int countOf(xCONNECTOR_TYPE);
 
     QList <xConnector*> _connectorLst;
-    QGraphicsPathItem *pShapeItem=nullptr;
+    xGraphicsPathItem *pShapeItem=nullptr;
     xGroupItem *pGrpItem=nullptr;
     xScrollTxtItem *pTxtItem=nullptr;
     QGraphicsEllipseItem *pStatusItem = nullptr;
@@ -93,6 +96,9 @@ protected:
     QTimer *pSelectionTimer;
     QMap<QString,xPROP_TYPE> _outputParamMp;
     QTimer* pUpdateTimer=nullptr;
+
+    QList <QStringList> _inputRequirements;     // list with possible input scenerios
+    QString _description;
 };
 
 #endif // XVOBJECTS_H

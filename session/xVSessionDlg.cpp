@@ -4,6 +4,7 @@
 #include <QMessageBox>
 #include <QDir>
 #include <QFileDialog>
+#include <QBuffer>
 
 xVSessionDlg::xVSessionDlg(QWidget *parent) :
     QDialog(parent),
@@ -43,13 +44,15 @@ xVSessionDlg::~xVSessionDlg()
 
 int xVSessionDlg::exec()
 {
+    int _returnCode=0;
     // check if a session was found
     updateGui();
     if (ui->pSessionTreeWdgt->topLevelItemCount()>0)
-        QDialog::exec();
+        _returnCode = QDialog::exec();
         //show();
     else
         emit KSignal(ST_MSG,new QString("No stored sessions found"));
+    return _returnCode;
 }
 
 void xVSessionDlg::addDashboards(QTreeWidgetItem* pParentItem,QString folder)

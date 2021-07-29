@@ -5,11 +5,20 @@
 xVCamObj::xVCamObj(const QString& txt):xVGenImpObj(txt)
 {
     _type = xVOT_PYLON_CAMERA;
+    _description = "Connects to a Pylon Instant Camera device";
+    _outputParamMp["connected"]._id = 0;
+    _outputParamMp["connected"]._value = false;
+    _outputParamMp["camera"]._id = 1;
+    _outputParamMp["camera"]._value = (quint64)0;
 }
 
 xVCamObj::xVCamObj(QDataStream &d):xVGenImpObj(d)
 {
     _type = xVOT_PYLON_CAMERA;
+    _outputParamMp["connected"]._id = 0;
+    _outputParamMp["connected"]._value = false;
+    _outputParamMp["camera"]._id = 1;
+    _outputParamMp["camera"]._value = (quint64)0;
 }
 
 void xVCamObj::run()

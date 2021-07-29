@@ -6,6 +6,7 @@
 xVMeshVisPropObj::xVMeshVisPropObj(const QString& txt):xVGenVisPropObj(txt)
 {
     _type = xVOT_MESH_VIS_PROP;
+    _description = "Defines visualization properties of a mesh";
     _paramMp["mesh visualization style"]._id=1;
     _paramMp["mesh visualization style"]._value="face";
 
@@ -47,11 +48,20 @@ xVMeshVisPropObj::xVMeshVisPropObj(const QString& txt):xVGenVisPropObj(txt)
     _paramMp["line thickness"]._id=13;
     _paramMp["line thickness"]._value = QVariant((double)1.3);
     _paramMp["line thickness"]._subGrp = "mesh";
+
+    _inputRequirements << (QStringList() << "mesh");
+
+    _outputParamMp["actor"]._value = QVariant::fromValue((vtkActorPtr)0);
+    _outputParamMp["actor"]._id=0;
 }
 
 xVMeshVisPropObj::xVMeshVisPropObj(QDataStream &d):xVGenVisPropObj(d)
 {
     _type = xVOT_MESH_VIS_PROP;
+
+    _inputRequirements << (QStringList() << "mesh");
+    _outputParamMp["actor"]._value = QVariant::fromValue((vtkActorPtr)0);
+    _outputParamMp["actor"]._id=0;
 }
 
 void xVMeshVisPropObj::reset()

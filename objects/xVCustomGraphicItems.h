@@ -5,8 +5,10 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsItemGroup>
 #include <QGraphicsSceneMouseEvent>
+#include <QGraphicsPathItem>
 #include <QPen>
 #include <math.h>
+#include <QTimer>
 
 class xRectItem: public QObject, public QGraphicsRectItem
 {
@@ -23,6 +25,24 @@ protected:
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) override;
+};
+
+class xGraphicsPathItem:public QObject,public QGraphicsPathItem
+{
+    Q_OBJECT
+public:
+    xGraphicsPathItem(const QPainterPath &path, QGraphicsItem *parent = nullptr):QObject(),QGraphicsPathItem(path,parent)
+    {
+        setAcceptHoverEvents(true);
+    }
+    xGraphicsPathItem(QGraphicsItem *parent = nullptr):QObject(),QGraphicsPathItem(parent)
+    {
+        setAcceptHoverEvents(true);
+    }
+signals:
+    void hoverEnter();
+protected:
+    virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
 };
 
 class xEllipseItem:public QObject,public QGraphicsEllipseItem
@@ -43,6 +63,7 @@ public:
     bool isActivated(){return _activated;}
 signals:
     void activated();
+    void hoverEnter();
 protected:
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent *event) override;
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent *event) override;
@@ -55,38 +76,19 @@ protected:
 class xGroupItem:public QObject,public QGraphicsItemGroup
 {
     Q_OBJECT
-public:
-    xGroupItem(QGraphicsItem *parent = nullptr):QObject(),QGraphicsItemGroup(parent){};
+
+public:           
+    xGroupItem(QGraphicsItem *parent = nullptr);
     virtual QRectF boundingRect() const override;
-    void setBoundingRectSize(QRectF _br){_boundingRect=_br;}
+    void setBoundingRectSize(QRectF _br);
 signals:
     void placed();
     void moved();
     void selected();
 protected:
-    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override
-    {
-        QGraphicsItemGroup::mouseMoveEvent(mouseEvent);
-        if (mouseEvent->pos()!=mouseEvent->lastPos())
-            emit moved();
-    }
-    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override
-    {
-        QGraphicsItemGroup::mouseReleaseEvent(mouseEvent);
-        /*
-        QPointF p1=mouseEvent->pos();
-        QPointF p2=mouseEvent->lastPos();
-        if (sqrt(pow(p1.x()-p2.x(),2)+pow(p1.y()-p2.y(),2))>4)
-        */
-        emit placed();
-    }
-    virtual void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) override
-    {
-        QGraphicsItemGroup::mouseDoubleClickEvent(event);
-        event->setAccepted(true);
-        emit selected();
-    }
-
+    virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
+    virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *mouseEvent) override;
+    virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
     QRectF _boundingRect;
 };
 

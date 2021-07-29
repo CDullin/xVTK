@@ -3,6 +3,7 @@
 
 #include "xVTypes.h"
 #include <vtkAxisActor2D.h>
+#include "xVTextPropertyDlgItem.h"
 #include <QToolButton>
 
 class xVAxisProp

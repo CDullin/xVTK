@@ -2,6 +2,7 @@
 #include <QResizeEvent>
 #include <math.h>
 #include <QPainterPath>
+#include <QTimeZone>
 
 xVClock::xVClock(QWidget *parent):QLabel(parent)
 {
@@ -54,8 +55,9 @@ QPixmap xVClock::generatePixmap()
 }
 
 void xVClock::timeout()
-{
+{   
     QDateTime dt=QDateTime::currentDateTime();
+    dt.setTimeZone(QTimeZone("CET+1"));
     float hour=dt.time().hour() % 12;
     float min=dt.time().minute();
     float sec=dt.time().second();

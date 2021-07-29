@@ -4,6 +4,7 @@
 xVCallDashboardObj::xVCallDashboardObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_CALL_DASHBOARD;
+    _description="Used to execute another dashboard.";
     generateShape();
 
     _paramMp["name"]._value = txt;
@@ -120,7 +121,8 @@ void xVCallDashboardObj::generateShape()
     rg.setColorAt(1,QColor(100,100,100));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

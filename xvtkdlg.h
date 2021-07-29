@@ -108,6 +108,8 @@ protected:
     void addVisWidget(QWidget*);
     void removeVisWidget(QWidget*);
     QString uniqueName(QString);
+    xVObj_Basics *unprocessedObjCount(long& c);
+
 
 private:
     Ui::xVTKDlg *ui;

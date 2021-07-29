@@ -15,17 +15,17 @@
 xVVolumeVisPropObj::xVVolumeVisPropObj(const QString& txt):xVGenVisPropObj(txt)
 {
     _type = xVOT_VOLUME_VIS_PROP;
-
+    _description="Defines visualization properties for volume data sets";
     _paramMp["volume visualization style"]._id=1;
     _paramMp["volume visualization style"]._value="composite";
 
     vtkPiecewiseFunction* alphaChannelFunc = vtkPiecewiseFunction::New();
     _paramMp["opacity function"]._id=2;
-    _paramMp["opacity function"]._value=QVariant::fromValue(alphaChannelFunc);
+    _paramMp["opacity function"]._value=QVariant::fromValue((vtkPiecewiseFunctionPtr)alphaChannelFunc);
 
     vtkColorTransferFunction* colorFunc = vtkColorTransferFunction::New();
     _paramMp["color function"]._id=3;
-    _paramMp["color function"]._value=QVariant::fromValue(colorFunc);
+    _paramMp["color function"]._value=QVariant::fromValue((vtkColorTransferFunctionPtr)colorFunc);
 
     _paramMp["ambient light power"]._id=4;
     _paramMp["ambient light power"]._value=QVariant(1.0);
@@ -33,11 +33,28 @@ xVVolumeVisPropObj::xVVolumeVisPropObj(const QString& txt):xVGenVisPropObj(txt)
     _paramMp["diffuse light power"]._value=QVariant(1.0);
     _paramMp["specular light power"]._id=6;
     _paramMp["specular light power"]._value=QVariant(1.0);    
+
+    _outputParamMp["volume"]._id=1;
+    _outputParamMp["volume"]._value=QVariant::fromValue((vtkVolumePtr)0);
+
+    _inputRequirements << (QStringList() << "volume data");
+
 }
 
 xVVolumeVisPropObj::xVVolumeVisPropObj(QDataStream &d):xVGenVisPropObj(d)
 {
     _type = xVOT_VOLUME_VIS_PROP;
+
+    _outputParamMp["volume"]._id=1;
+    _outputParamMp["volume"]._value=QVariant::fromValue((vtkVolumePtr)0);
+
+    vtkColorTransferFunctionPtr colorFunc = _paramMp["color function"]._value.value<vtkColorTransferFunctionPtr>();
+    vtkPiecewiseFunctionPtr alphaChannelFunc = _paramMp["opacity function"]._value.value<vtkPiecewiseFunctionPtr>();
+
+    if (alphaChannelFunc->GetSize()==0) // we need to make one
+    {
+        int dummy=0;
+    }
 }
 
 void xVVolumeVisPropObj::reset()
@@ -98,7 +115,7 @@ void xVVolumeVisPropObj::run()
                 }
             }
 
-    if (pDataImporter && pRefVolObj)
+    if (pDataImporter && pRefVolObj && (*pRefVolObj->outputParamMap())["volume data"]._value.value<vtkImageDataPtr>()!=0)
     {
 
         volumeProperty = vtkVolumeProperty::New();

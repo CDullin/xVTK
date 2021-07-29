@@ -16,7 +16,7 @@ xVUserTableRuntimeDlg::~xVUserTableRuntimeDlg()
 void xVUserTableRuntimeDlg::setMap(xParamMap *m,xVUserTableImportDlgObj* pObj)
 {
     ui->pPropTableWdgt->setObjectColumnStaysHidden(true);
-    ui->pPropTableWdgt->updateTable(m,pObj);
+    ui->pPropTableWdgt->updateTable(m,pObj,true);
 }
 void xVUserTableRuntimeDlg::setTitle(const QString& txt)
 {

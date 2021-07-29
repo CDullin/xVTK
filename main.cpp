@@ -3,6 +3,7 @@
 #include "QVTKApplication.h"
 
 #include <QDir>
+#include <QSurfaceFormat>
 #include "xVImageObj.h"
 
 int main(int argc, char *argv[])
@@ -33,6 +34,11 @@ int main(int argc, char *argv[])
         img.save(lst[i].absolutePath()+"/../conv_images/"+lst[i].fileName());
     }
 */
+
+    QSurfaceFormat f=QSurfaceFormat::defaultFormat();
+    f.setSamples(0);
+    QSurfaceFormat::setDefaultFormat(f);
+
     QVTKApplication a(argc, argv);
     xVTKDlg w;
     w.show();

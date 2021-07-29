@@ -4,6 +4,7 @@
 xVIFObj::xVIFObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_IF;
+    _description = "Allows to fork the process\ndepending on a binary decision";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     _paramMp["condition"]._value = QVariant::fromValue(xVEvalCondition("0"));
@@ -90,7 +91,8 @@ void xVIFObj::generateShape()
     rg.setColorAt(1,QColor(150,150,0));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

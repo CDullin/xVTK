@@ -37,6 +37,8 @@
 #include "xvEvalCondition.h"
 #include "xVAbstractBaseObj.h"
 #include <QCoreApplication>
+#include <QtGlobal>
+#include <QtDebug>
 
 bool _abort=false;
 QMap<QString,xPROP_TYPE> _settings;
@@ -66,37 +68,58 @@ void xVProgressObserver::UpdateProgress(double amount){
     emit KSignal(ST_SET_PROCESS,new int(amount*::_settings["progress scaling factor"]._value.value<xLimitedDouble>()._value));
     qApp->processEvents();
 }
-
+//fake
+QDataStream &operator<<(QDataStream &out, const vtkImageDataPtr &myObj){
+    out << (quint64)0;
+    return out;
+}
+QDataStream &operator>>(QDataStream &in, vtkImageDataPtr &myObj){
+    quint64 v; in >> v;myObj=(vtkImageDataPtr)v;
+    return in;
+}
+QDataStream &operator<<(QDataStream &out, const vtkVolumePtr &myObj){
+    out << (quint64)0;
+    return out;
+}
+QDataStream &operator>>(QDataStream &in, vtkVolumePtr &myObj){
+    quint64 v; in >> v;myObj=(vtkVolumePtr)v;
+    return in;
+}
 QDataStream &operator<<(QDataStream &out, const xFileName &myObj){
     out << myObj._fileName << myObj._type << myObj._relative;
-    return out;}
+    return out;
+}
 QDataStream &operator>>(QDataStream &in, xFileName &myObj){
     QString s;
     in >> myObj._fileName >> myObj._type >> myObj._relative;
-    return in;}
+    return in;
+}
 QDataStream &operator<<(QDataStream &out, const QPointF &myObj){
     out << myObj.x() << myObj.y();
-    return out;}
+    return out;
+}
 QDataStream &operator>>(QDataStream &in, QPointF &myObj){
     qreal x,y;
     in >> x >> y;myObj=QPointF(x,y);
-    return in;}
+    return in;
+}
 QDataStream &operator<<(QDataStream &out, const x3D_SAMPLE_POS &myObj){
     out << myObj.x << myObj.y << myObj.z;
-    return out;}
+    return out;
+}
 QDataStream &operator>>(QDataStream &in, x3D_SAMPLE_POS &myObj){
     in >> myObj.x >> myObj.y >> myObj.z;
-    return in;}
+    return in;
+}
 QDataStream &operator<<(QDataStream &out, const vtkPiecewiseFunctionPtr &myObj){
     out << (quint16)myObj->GetSize();
     double val[4];
     for (int i=0;i<myObj->GetSize();++i)
     {
-        myObj->GetNodeValue(i,val); out << val[0] << val[1] << val[2] << val[3];
+        myObj->GetNodeValue(i,val); out << val[0] << val[1];
     }
     return out;
 }
-
 QDataStream &operator>>(QDataStream &in, vtkPiecewiseFunctionPtr &myObj)
 {
     quint16 size; in >> size;
@@ -104,32 +127,39 @@ QDataStream &operator>>(QDataStream &in, vtkPiecewiseFunctionPtr &myObj)
     double val[4];
     for (int i=0;i<size;++i)
     {
-        in >> val[0] >> val[1] >> val[2] >> val[3];
-        myObj->SetNodeValue(i,val);
+        in >> val[0] >> val[1];
+        myObj->AddPoint(val[0],val[1]);
     }
     return in;
 }
 QDataStream &operator<<(QDataStream &out, const vtkColorTransferFunctionPtr &myObj)
 {
+    // debug
+    quint64 position=out.device()->pos();
+
     out << (quint16)myObj->GetSize();
-    double pos,col[3];
+    double col[4];
     for (int i=0;i<myObj->GetSize();++i)
     {
-        myObj->GetColor(pos,col); out << pos << col[0] << col[1] << col[2];
+        myObj->GetNodeValue(i,col);
+        out << col[0] << col[1] << col[2] << col[3];
+        qWarning() << QString("out %1 %2 %3 %4 %5").arg(i).arg(col[0]).arg(col[1]).arg(col[2]).arg(col[3]);
     }
     return out;
 }
 QDataStream &operator>>(QDataStream &in, vtkColorTransferFunctionPtr &myObj)
 {
     quint16 size;
-    double pos,col[3];
+    double col[4];
     in >> size;
     myObj=vtkColorTransferFunction::New();
     for (int i=0;i<size;++i)
     {
-        in >> pos >> col[0] >> col[1] >> col[2];
-        myObj->AddRGBPoint(pos,col[0],col[1],col[2]);
+        in >> col[0] >> col[1] >> col[2] >> col[3];
+        myObj->AddRGBPoint(col[0],col[1],col[2],col[3]);
+        qWarning() << QString("in %1 %2 %3 %4 %5").arg(i).arg(col[0]).arg(col[1]).arg(col[2]).arg(col[3]);
     }
+    return in;
 }
 QDataStream &operator<<(QDataStream &out, const xLimitedInt &myObj){
     out << myObj._value << myObj._lowerLimit << myObj._upperLimit;
@@ -171,6 +201,13 @@ void saveToStream(QDataStream &d,const QVariant& v)
     d << v;
 }
 */
+
+void addToList(QStringList& sl,const QStringList& s,bool _caseSensitive)
+{
+    for (int i=0;i<s.count();++i)
+        if (!sl.contains(s[i],_caseSensitive ? Qt::CaseSensitive : Qt::CaseInsensitive)) sl << s[i];
+}
+
 QString objName2objId(const QString& name)
 {
     QString id="";

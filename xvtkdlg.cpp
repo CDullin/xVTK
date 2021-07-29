@@ -191,8 +191,7 @@ void xVTKDlg::generateHooks()
     _hookLst.append(HOOK("properties","camera","",ST_CREATE_OBJ_HOOK,xVOT_PYLON_CAM_PROP));
     _hookLst.append(HOOK("properties","clip plane","",ST_CREATE_OBJ_HOOK,xVOT_CLIPPING_PLANE));
     _hookLst.append(HOOK("properties","clip box","",ST_CREATE_OBJ_HOOK,xVOT_CLIPPING_BOX));
-    _hookLst.append(HOOK("properties","clip sphere","",ST_CREATE_OBJ_HOOK,xVOT_CLIPPING_SPHERE));
-    _hookLst.append(HOOK("properties","slicer","",ST_CREATE_OBJ_HOOK,xVOT_SLICER_OBJ));
+    _hookLst.append(HOOK("measurement","region","",ST_CREATE_OBJ_HOOK,xVOT_MEASUREMENT_REGION));
     _hookLst.append(HOOK("output","2D","",ST_CREATE_OBJ_HOOK,xVOT_2D_VIEW));
     _hookLst.append(HOOK("output","3D","",ST_CREATE_OBJ_HOOK,xVOT_3D_VIEW));
     _hookLst.append(HOOK("output","report","",ST_CREATE_OBJ_HOOK,xVOT_REPORT));
@@ -280,12 +279,12 @@ void xVTKDlg::clear(bool verbose)
         xVObj_Basics *pVObj = new xVStartObj("#start");
         _dashboardLst[_currentDashBoard]->pDashBoardGV->scene()->addItem(pVObj->item());
         emit KSignal(ST_ADD_OBJECT,pVObj);
-        pVObj->item()->setPos(0,25);
+        pVObj->item()->setPos(-100,50);
         snapToGrid(pVObj);
         pVObj = new xVEndObj("#end");
         _dashboardLst[_currentDashBoard]->pDashBoardGV->scene()->addItem(pVObj->item());
         emit KSignal(ST_ADD_OBJECT,pVObj);
-        pVObj->item()->setPos(700,25);
+        pVObj->item()->setPos(700,300);
         snapToGrid(pVObj);
     }
 }
@@ -326,11 +325,11 @@ void xVTKDlg::placeObjInScene(xVObj_Basics* pObj)
                 if (_curObjRect.intersects(_objRect))
                 {
                     _placed = false;
-                    pObj->item()->moveBy(0,20);
+                    pObj->item()->moveBy(50,0);
                     _objRect = pObj->item()->mapToScene(pObj->item()->boundingRect());
-                    if (_objRect.boundingRect().bottom()>_sceneRect.bottom())
+                    if (_objRect.boundingRect().right()>_sceneRect.right()-100)
                     {
-                        pObj->item()->setPos(pObj->item()->x()+50,20);
+                        pObj->item()->setPos(50,pObj->item()->y()+75);
                     }
                     _objRect = pObj->item()->mapToScene(pObj->item()->boundingRect());
                     continue;
@@ -420,6 +419,8 @@ void xVTKDlg::KSlot(const SIG_TYPE& type,void *pData)
         xVObj_Basics *pVObj=nullptr;
         switch (*pOType)
         {
+        case xVOT_MEASUREMENT_REGION:   pVObj = new xVMeasurementRegion("#region");                                     break;
+        case xVOT_CLIPPING_BOX:         pVObj = new xVBoxObj(uniqueName("#box"));                                       break;
         case xVOT_CLIPPING_PLANE:       pVObj = new xVPlaneObj(uniqueName("#plane"));                                   break;
         case xVOT_POLYGONIZATION:       pVObj = new xVPolygonizationFilterObj(uniqueName("#polygonization"));           break;
         case xVOT_MORPH_FILTER:         pVObj = new xVMorphFilterObj(uniqueName("#morph filter"));                      break;
@@ -625,7 +626,7 @@ xVTKDlg::~xVTKDlg()
 
 void xVTKDlg::accept()
 {
-    if (QMessageBox::question(0,"Warning!","Do you really like to close the application?")==QMessageBox::Yes)
+    if (QMessageBox::question(this,"Warning!","Do you really like to close the application?")==QMessageBox::Yes)
     {
         if (pSessionDlg) delete pSessionDlg;
         QDialog::accept();
@@ -693,6 +694,7 @@ void xVTKDlg::addVisWidget(QWidget* wdgt)
     pVisMainWin->addDockWidget(Qt::LeftDockWidgetArea,pDockWdgt);
     pDockWdgt->show();
     pDockWdgt->setFeatures(QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetFloatable);
+    if (pDockWdgt->titleBarWidget()) pDockWdgt->titleBarWidget()->setAutoFillBackground(true);
     wdgt->show();
     QAction *pAction = new QAction(title);
     pAction->setCheckable(true);

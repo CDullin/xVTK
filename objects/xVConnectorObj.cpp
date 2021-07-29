@@ -7,8 +7,24 @@
 #include <QDateTime>
 #include <QCursor>
 #include <math.h>
+#include <QPen>
 
 using namespace std;
+
+void xConnectorObj::generatePattern()
+{
+    _patternTimer.setInterval(250);
+    _patternTimer.setSingleShot(false);
+    connect(&_patternTimer,SIGNAL(timeout()),this,SLOT(patternTimeOut()));
+    _patternTimer.start();
+}
+
+void xConnectorObj::patternTimeOut()
+{
+    _patternId = (_patternId-1) % 8;
+    _linePen.setDashOffset(_patternId);
+    if (pPathItem) pPathItem->setPen(_linePen);
+}
 
 xConnectorObj::xConnectorObj(QDataStream &d):xVAbstractBaseObj(d)
 {
@@ -30,7 +46,7 @@ xConnectorObj::xConnectorObj(xConnector* pIn,xConnector* pOut,bool _param):xVAbs
     pOutObj=pOut;
     _id="COB"+QDateTime::currentDateTime().toString("yyMMddhhmmsszzz")+QString("_%1").arg(::_objIDCount++);
     _paramMp["show arrows"]._id = 1;
-    _paramMp["show arrows"]._value = true;
+    _paramMp["show arrows"]._value = false;
 
     generateShape();
 }
@@ -64,9 +80,10 @@ void xConnectorObj::updatePath()
         pGrpItem->scene()->removeItem(_arrowLst[i]);
     _arrowLst.clear();
 
+    QPainterPath path2;
+    path2.moveTo(oPnt);
+    path2.addEllipse(QRectF(oPnt.x()-2,oPnt.y()-2,4,4));
     QPainterPath path;
-    path.moveTo(oPnt);
-    path.addEllipse(QRectF(oPnt.x()-2,oPnt.y()-2,4,4));
     path.moveTo(oPnt);
     for (int i=0;i<_sectionLst.count()-1;++i)
     {
@@ -89,6 +106,7 @@ void xConnectorObj::updatePath()
     }
     path.lineTo(iPnt);
     pPathItem->setPath(path);
+    pPathStartItem->setPath(path2);
 
     // we put at path length
     float len=path.length();
@@ -141,11 +159,12 @@ void xConnectorObj::updatePath()
     pEndItem->setPath(endPath);
     pEndGrp->setPos(iPnt);
     pPathItem->setPath(path);
+    pPathStartItem->setPath(path2);
 
     for (int i=0;i<_nodeLst.count();++i) _nodeLst[i]->setVisible(_selected);
     for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(!_selected && _paramMp["show arrows"]._value.toBool());
 
-    _dontResetControlPoints = false;
+    _dontResetControlPoints = false;        
 }
 
 void xConnectorObj::addNodeAtCursorPos()
@@ -256,6 +275,11 @@ void xConnectorObj::generateShape()
     {
         QPen p(Qt::black);
         p.setWidth(2);
+
+        _linePen.setColor(Qt::black);
+        _linePen.setWidth(3);
+        _linePen.setStyle(Qt::DashDotLine);
+
         pGrpItem = new xGroupItem();
         pEndGrp = new QGraphicsItemGroup();
         pEndItem = new QGraphicsPathItem();
@@ -266,9 +290,12 @@ void xConnectorObj::generateShape()
         pGrpItem->addToGroup(pEndGrp);
         pPathItem = new QGraphicsPathItem();
         pGrpItem->addToGroup(pPathItem);
-        pPathItem->setPen(p);
+        pPathItem->setPen(_linePen);
+        pPathStartItem = new QGraphicsPathItem();
+        pGrpItem->addToGroup(pPathStartItem);
+        pPathStartItem->setPen(p);
         pEllipseItem->setPen(p);
-        pEndItem->setPen(p);
+        pEndItem->setPen(QPen(Qt::black,3));
 
         createPath();
 
@@ -301,6 +328,8 @@ void xConnectorObj::generateShape()
         pSelectionTimer->setInterval(1000);
         pSelectionTimer->setSingleShot(false);
         connect(pSelectionTimer,SIGNAL(timeout()),paAnimation2,SLOT(start()));
+
+        generatePattern();
     }
 }
 
@@ -340,7 +369,7 @@ void xConnectorObj::setParamSelected(bool b)
             if (pGrpItem) pGrpItem->setGraphicsEffect(pEffect);
 
             for (int i=0;i<_nodeLst.count();++i) _nodeLst[i]->setVisible(false);
-            for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(true);
+            for (int i=0;i<_arrowLst.count();++i) _arrowLst[i]->setVisible(_paramMp["show arrows"]._value.toBool());
         }
     }
 }
@@ -350,6 +379,8 @@ xConnectorObj::~xConnectorObj()
 {
     if (pGrpItem)
     {
+        _patternTimer.stop();
+        if (pSelectionTimer) pSelectionTimer->stop();
         pGrpItem->scene()->removeItem(pGrpItem);
     }
 }

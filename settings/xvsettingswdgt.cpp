@@ -48,6 +48,8 @@ void xVSettingsWdgt::generateDefault()
     qRegisterMetaTypeStreamOperators<xVEvalCondition>("xVEvalCondition");
     qRegisterMetaTypeStreamOperators<xVTextPropPtr>("xVTextPropPtr");
     qRegisterMetaTypeStreamOperators<xVAxisPropPtr>("xVAxisPropPtr");
+    qRegisterMetaTypeStreamOperators<vtkImageDataPtr>("vtkImageDataPtr");
+    qRegisterMetaTypeStreamOperators<vtkVolumePtr>("vtkVolumePtr");
 
     ::_settings["snap to grid"]._id=0;
     ::_settings["snap to grid"]._value=true;

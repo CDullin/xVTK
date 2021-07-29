@@ -69,6 +69,8 @@ void xVTKDlg::autoSave(xVDashBoard *pDashBoard)
                     ds << (quint16) baseObjLst.count();
                     for (QList<xVObj_Basics*>::iterator it=baseObjLst.begin();it!=baseObjLst.end();++it)
                     {
+                        quint64 position=ds.device()->pos();
+
                         ds << (quint32)(*it)->type();
                         // id, parameter, (referenced data), position in the scene
                         (*it)->save(ds,false);
@@ -157,7 +159,10 @@ void xVTKDlg::save(bool _forceDialog)
                 ds << (quint16) baseObjLst.count();
                 for (QList<xVObj_Basics*>::iterator it=baseObjLst.begin();it!=baseObjLst.end();++it)
                 {
+                    quint64 position=ds.device()->pos();
                     ds << (quint32)(*it)->type();
+                    emit KSignal(ST_MSG,new QString(QString("saving %1 %2").arg(position,6,16,QChar('0')).arg((*it)->type())));
+
                     // id, parameter, (referenced data), position in the scene
                     (*it)->save(ds,_dashboardLst[_currentDashBoard]->_explicit);
                     // save position in scene
@@ -289,9 +294,13 @@ void xVTKDlg::load(QString fname)
         for (int i=0;i<_baseObjCount && !_abort;++i) {
             quint64 _pos = d.device()->pos();
             quint32 _type;d >> _type;
+            emit KSignal(ST_MSG,new QString(QString("loading %1 %2").arg(_pos,6,16,QChar('0')).arg(_type)));
             xVObj_Basics* pObj=nullptr;
             switch ((xVO_TYPE)_type)
             {
+            case xVOT_MEASUREMENT_REGION: pObj = new xVMeasurementRegion(d);break;
+            case xVOT_CLIPPING_BOX:     pObj = new xVBoxObj(d);break;
+            case xVOT_CLIPPING_PLANE:   pObj = new xVPlaneObj(d);break;
             case xVOT_POLYGONIZATION:   pObj = new xVPolygonizationFilterObj(d);break;
             case xVOT_MORPH_FILTER:     pObj = new xVMorphFilterObj(d);break;
             case xVOT_LSI_FILTER:       pObj = new xVLSIFilterObj(d);break;

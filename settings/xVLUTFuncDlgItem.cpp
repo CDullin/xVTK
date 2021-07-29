@@ -41,8 +41,17 @@ void xVLUTFuncDlgItem::generatePixmap()
                 }
     }
 
-    if (!pVObj || !pVObj->histo()) return;
-
+    if (!pVObj || !pVObj->histo() || pVObj->histo()->info()._count==0)
+    {
+        QPixmap pix(width(),height());
+        pix.fill(Qt::red);
+        QPainter pain(&pix);
+        QPen pen(Qt::black);
+        pain.drawText(QRectF(0,0,width(),height()),Qt::AlignCenter,"no input data");
+        pain.end();
+        setPixmap(pix);
+    }
+    else
     setPixmap(xVHistoDlg::bar(
                   xVHistoDlg::HDM_LUT,
                   size().width(),size().height(),
@@ -75,10 +84,8 @@ void xVLUTFuncDlgItem::mouseDoubleClickEvent(QMouseEvent *event)
     dlg.setColorTransFunc((*pVolVisPropObj->paramMap())["color function"]._value.value<vtkColorTransferFunctionPtr>());
     connect(&dlg,SIGNAL(modified(const QString&)),pVolVisPropObj,SLOT(paramModified(const QString&)));
     connect(&dlg,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
-    if (dlg.exec()==QDialog::Accepted)
-    {
-        //copy values
-    }
+    dlg.exec();
+    generatePixmap();
 }
 
 void xVLUTFuncDlgItem::resizeEvent(QResizeEvent *event)

@@ -33,10 +33,8 @@ xVTextProp::xVTextProp(){
     _paramMp["shadow"]._value=false;
     _paramMp["shadow color"]._id=13;
     _paramMp["shadow color"]._value=QVariant::fromValue(QColor(0,0,0,255));
-    _paramMp["shadow offset X [px]"]._id=14;
-    _paramMp["shadow offset X [px]"]._value=QVariant::fromValue(xLimitedInt(1,-100,100));
-    _paramMp["shadow offset Y [px]"]._id=15;
-    _paramMp["shadow offset Y [px]"]._value=QVariant::fromValue(xLimitedInt(1,-100,100));
+    _paramMp["shadow offset [pnt]"]._id=14;
+    _paramMp["shadow offset [pnt]"]._value=QVariant::fromValue(QPoint(1,1));
     _paramMp["horizontal alignment"]._id=16;
     _optionLsts["horizontal alignment"]=QStringList() << "left" << "center" << "right";
     _paramMp["horizontal alignment"]._value="center";
@@ -85,8 +83,7 @@ void xVTextProp::generateParamFromVtkTextProp(vtkTextProperty *pProp)
     color.setRedF(col[0]);color.setGreenF(col[1]);color.setBlueF(col[2]);
     _paramMp["shadow color"]._value=QVariant::fromValue(color);
     int shadow_offset[2];pVtkTextProp->GetShadowOffset(shadow_offset);
-    _paramMp["shadow offset X [px]"]._value=QVariant::fromValue(xLimitedInt(shadow_offset[0],-100,100));
-    _paramMp["shadow offset Y [px]"]._value=QVariant::fromValue(xLimitedInt(shadow_offset[1],-100,100));
+    _paramMp["shadow offset [pnt]"]._value=QVariant::fromValue(QPoint(shadow_offset[0],shadow_offset[1]));
     switch (pVtkTextProp->GetJustification())
     {
     case VTK_TEXT_LEFT: _paramMp["horizontal alignment"]._value="left";break;
@@ -131,8 +128,8 @@ vtkTextProperty* xVTextProp::generateVtkTextPropFromParam(){
     pVtkTextProp->SetLineOffset(_paramMp["line offset [px]"]._value.value<xLimitedInt>()._value);
     pVtkTextProp->SetOpacity(_paramMp["opacity"]._value.value<xLimitedDouble>()._value);
     pVtkTextProp->SetShadow(_paramMp["shadow"]._value.toBool());
-    pVtkTextProp->SetShadowOffset(_paramMp["shadow offset X [px]"]._value.value<xLimitedInt>()._value,
-                                    _paramMp["shadow offset Y [px]"]._value.value<xLimitedInt>()._value);
+    QPoint offset = _paramMp["shadow offset [pnt]"]._value.value<QPoint>();
+    pVtkTextProp->SetShadowOffset(offset.x(),offset.y());
     pVtkTextProp->SetLineSpacing(_paramMp["line spacing [px]"]._value.value<xLimitedInt>()._value);
     pVtkTextProp->SetUseTightBoundingBox(_paramMp["tight bounding box"]._value.toBool());
     switch (_optionLsts["vertical alignment"].indexOf(_paramMp["vertical alignment"]._value.toString()))

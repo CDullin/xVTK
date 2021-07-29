@@ -10,6 +10,7 @@
 #include "xVDoubleValueDlgItem.h"
 #include "xVColorDlgItem.h"
 #include "xVBoolDlgItem.h"
+#include "xVPointDlgItem.h"
 #include "xVUserTableDefinitionDlgItem.h"
 #include "xVTextPropertyDlgItem.h"
 #include "xVAxisPropertyDlgItem.h"

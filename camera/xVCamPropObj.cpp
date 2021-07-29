@@ -16,7 +16,8 @@ CPixelFormatAndAoiConfiguration::CPixelFormatAndAoiConfiguration(xVCamPropObj* p
     pCamPropRef = p;
 }
 void CPixelFormatAndAoiConfiguration::OnGrabStarted( CInstantCamera& camera)
-{}
+{
+}
 void CPixelFormatAndAoiConfiguration::OnCameraDeviceRemoved( CInstantCamera& camera)
 {
     emit CameraDeviceRemoved();
@@ -104,6 +105,7 @@ void CPixelFormatAndAoiConfiguration::OnOpened( Pylon::CInstantCamera& camera)
 
 xVCamPropObj::xVCamPropObj(const QString& txt):xVGenVisPropObj(txt){
     _type = xVOT_PYLON_CAM_PROP;
+    _description = "Used to acquire images from a connected Pylon Camera device";
     _paramMp["running"]._id = 1;
     _paramMp["running"]._value = false;
     _paramMp["grab strategy"]._id = 2;
@@ -126,10 +128,17 @@ xVCamPropObj::xVCamPropObj(const QString& txt):xVGenVisPropObj(txt){
     _paramMp["horizontal binning"]._value = QVariant::fromValue(xLimitedInt(2,1,10));
     _paramMp["vertical binning"]._id = 10;
     _paramMp["vertical binning"]._value = QVariant::fromValue(xLimitedInt(2,1,10));
+
+    _inputRequirements << (QStringList() << "camera");
+
+    _outputParamMp["image"]._id=1;
+    _outputParamMp["image"]._value = QVariant::fromValue((vtkImageDataPtr)0);
 };
 
 xVCamPropObj::xVCamPropObj(QDataStream& d):xVGenVisPropObj(d){
     _type = xVOT_PYLON_CAM_PROP;
+    _outputParamMp["image"]._id=1;
+    _outputParamMp["image"]._value = QVariant::fromValue((vtkImageDataPtr)0);
 };
 
 void xVCamPropObj::retrieveValuesAndLimitsFromCamera()
@@ -257,6 +266,9 @@ vtkImageDataPtr vtkImageFromPylon(const CPylonImage& iimg,vtkImageData *vtkImage
         vtkImage->SetScalarType(VTK_UNSIGNED_SHORT,pInfo);
         vtkImage->AllocateScalars(VTK_UNSIGNED_SHORT,3);
         bytes=6;
+        break;
+    default:
+        // unhandled
         break;
     }
     pInfo->Delete();

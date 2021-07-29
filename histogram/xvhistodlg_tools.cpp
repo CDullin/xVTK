@@ -86,13 +86,14 @@ void xVHistoDlg::interactiveElementMoved(QPointF p,const int& type)
             pZoomConLeft->setLine(QLineF(pZoomLeft->mapToScene(QPointF(0,0)),zoomPixBottomLeft));
             pZoomConRight->setLine(QLineF(pZoomRight->mapToScene(QPointF(0,0)),zoomPixBottomRight));
             pHorZoomAxis->updateAxis();
+            pVerZoomAxis->updateAxis();
         }
 
         switch (_mode)
         {
         case HDM_OPACITY : updateOpacityFunc();break;
         case HDM_LUT: updateColorFunc(); break;
-        }
+        }                
     }
 }
 void xVHistoDlg::interactiveElementDblClicked(QPointF p, const int& type)

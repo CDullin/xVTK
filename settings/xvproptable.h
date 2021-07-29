@@ -12,8 +12,8 @@ class xVPropTable : public QTableWidget
     Q_OBJECT
 public:
     xVPropTable(QWidget* parent=nullptr);
-    void updateTable(QMap<QString,xPROP_TYPE>*,xVAbstractBaseObj* pCurrentObj=nullptr);
-    void updateTable(){updateTable(pParamMpRef,pCurrentObj);}
+    void updateTable(QMap<QString,xPROP_TYPE>*,xVAbstractBaseObj* pCurrentObj=nullptr,bool _sortAccordingRefObj=false);
+    void updateTable(bool _sortAccordingRefObj=false){updateTable(pParamMpRef,pCurrentObj,_sortAccordingRefObj);}
     void setOnlyRealDataTypesVisible(bool);
     bool keyExists(const QString&);
     void setObjectColumnStaysHidden(bool b){_objectColumnStaysHidden=b;}

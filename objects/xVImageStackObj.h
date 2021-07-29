@@ -12,6 +12,9 @@ public:
     xVImageStackObj(QDataStream &);
     virtual void run() override;
     virtual void reset() override;
+    virtual void paramModified(const QString& txt="") override;
+protected:
+    QFileInfoList _fileLst;
 };
 
 #endif // XVIMAGESTACKOBJ_H

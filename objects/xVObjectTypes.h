@@ -43,5 +43,7 @@
 #include "xVMorphFilterObj.h"
 #include "xVPolygonizationFilterObj.h"
 #include "xVPlaneObj.h"
+#include "xVBoxObj.h"
+#include "xVMeasurementRegion.h"
 
 #endif // XVOBJECTTYPES_H

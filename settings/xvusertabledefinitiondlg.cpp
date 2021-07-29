@@ -72,6 +72,8 @@ void xVUserTableDefinitionDlg::setToControlMode()
     ui->pRemoveTB->hide();
     setFixedSize(800,270);
 
+    ui->pTgtPropTable->setObjectColumnStaysHidden(true);
+
 }
 
 void xVUserTableDefinitionDlg::KSlot(const SIG_TYPE& type,void *pData)
@@ -190,13 +192,20 @@ void xVUserTableDefinitionDlg::moveIn()
         quint32 _id=1;
         for (QMap<QString,xPROP_TYPE>::iterator it=ui->pTgtPropTable->paramMap()->begin();it!=ui->pTgtPropTable->paramMap()->end();++it)
             _id = max(_id,it->_id);
-        if (!ui->pTgtPropTable->keyExists(key) &&
+        if ((!ui->pTgtPropTable->keyExists(key) ||
+             (ui->pTgtPropTable->keyExists(key) &&
+              (*ui->pTgtPropTable->paramMap())[key].pRefObj!=_whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj)) &&
                 (*ui->pSrcPropTable->paramMap())[key]._value.userType()!=QMetaType::type(("xParamMap")))    // we dont add maps
         {
-            (*ui->pTgtPropTable->paramMap())[key]=(*ui->pSrcPropTable->paramMap())[key];
-            (*ui->pTgtPropTable->paramMap())[key].pRefObj = _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj;
-            (*ui->pTgtPropTable->paramMap())[key]._id = _id+1;
-            ui->pTgtPropTable->updateTable();
+            xVAbstractBaseObj *pRefObj = _whatToDefineMp[ui->pControlledObjCB->currentText()].pRefObj;
+            QString prefix ="[global name space]";
+            if (pRefObj) prefix="["+(*pRefObj->paramMap())["name"]._value.toString()+"]";
+
+            (*ui->pTgtPropTable->paramMap())[prefix+'+'+key]=(*ui->pSrcPropTable->paramMap())[key];
+            (*ui->pTgtPropTable->paramMap())[prefix+'+'+key].pRefObj = pRefObj;
+            (*ui->pTgtPropTable->paramMap())[prefix+'+'+key]._id = _id+1;
+            (*ui->pTgtPropTable->paramMap())[prefix+'+'+key]._subGrp = "";
+            ui->pTgtPropTable->updateTable(true);
         }
     }
 }
@@ -208,7 +217,7 @@ void xVUserTableDefinitionDlg::moveOut()
     {
         QString key = ui->pTgtPropTable->item(lst.at(0).topRow(),0)->text();
         (*ui->pTgtPropTable->paramMap()).remove(key);
-        ui->pTgtPropTable->updateTable();
+        ui->pTgtPropTable->updateTable(true);
     }
 }
 

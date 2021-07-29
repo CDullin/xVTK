@@ -43,12 +43,7 @@ void xVAbstractBaseObj::KSlot(const SIG_TYPE&,void* data)
 void xVAbstractBaseObj::save(QDataStream& d,bool _explicit)
 {
     d << _selected;
-    d << (quint16)_paramMp.count();
-    for (QMap<QString,xPROP_TYPE>::iterator it=_paramMp.begin();it!=_paramMp.end();++it)
-    {
-        d << it.key();
-        it->save(d);
-    }
+    d << _paramMp;
     d << _id;
 }
 
@@ -57,13 +52,7 @@ xVAbstractBaseObj::xVAbstractBaseObj(QDataStream& d):QObject()
 {
     quint64 _pos = d.device()->pos();
     d >> _selected;
-    quint16 _count; d >> _count;
-    for (int i=0;i<_count;++i)
-    {
-        QString k;d >> k;
-        xPROP_TYPE prop(d);
-        _paramMp[k]=prop;
-    }
+    d >> _paramMp;
     d >> _id;
 }
 

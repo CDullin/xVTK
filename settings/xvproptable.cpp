@@ -163,6 +163,20 @@ void xVPropTable::customItemChanged()
                     (*pParamMpRef)[item(row,0)->text()]._value=QVariant::fromValue(pItem->vector());
             }
                 break;
+            case QVariant::Point:
+            {
+                xVPointDlgItem* pItem = dynamic_cast<xVPointDlgItem*>(wdgt);
+                if (pItem)
+                    ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(pItem->point().toPoint());
+            }
+            break;
+            case QVariant::PointF:
+            {
+                xVPointDlgItem* pItem = dynamic_cast<xVPointDlgItem*>(wdgt);
+                if (pItem)
+                    ((*pParamMpRef)[item(row,0)->text()]._value)=QVariant::fromValue(pItem->point());
+            }
+            break;
             case QVariant::UserType:
             {
                 if (var.userType()==QMetaType::type("xFileName"))
@@ -322,7 +336,7 @@ void xVPropTable::updateRowVisibility()
     }
 }
 
-void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBaseObj* pObj)
+void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBaseObj* pObj,bool _sortAccordingRefObj)
 {
     if (pParamMp==nullptr) return;
 
@@ -342,13 +356,36 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
     setRowCount(0);
     setColumnCount(3);
 
-    // get ordered map
-    QVector <int> idVec;
+    QVector <quint32> idVec;
     long r=0;
-    for (QMap<QString,xPROP_TYPE>::iterator it=pParamMp->begin();it!=pParamMp->end();++it)
-            idVec.append((*it)._id);
-    std::sort(idVec.begin(), idVec.end(), [](const int& a, const int& b) {return a < b;});
+    // sort according reference objects, insert caption objects
+    if (_sortAccordingRefObj)
+    {
+        QMap <xVAbstractBaseObj*,QString> _referenceMap;
+        for (QMap<QString,xPROP_TYPE>::iterator it=pParamMp->begin();it!=pParamMp->end();++it)
+        {
+            if ((*it).pRefObj==nullptr) _referenceMap[nullptr]="global namespace";
+            else _referenceMap[(*it).pRefObj]=(*(it->pRefObj->paramMap()))["name"]._value.toString();
 
+            long j=0;
+            long id=0;
+            for (QMap <xVAbstractBaseObj*,QString>::iterator it2=_referenceMap.begin();it2!=_referenceMap.end();++it2)
+            {
+                if (it2.key()==it->pRefObj) id=j;
+                ++j;
+            }
+
+            idVec.append(id*100+((*it)._id%100)+1);
+            (*it)._id=idVec.last();
+        }
+    }
+    else
+    {
+        // get ordered map
+        for (QMap<QString,xPROP_TYPE>::iterator it=pParamMp->begin();it!=pParamMp->end();++it)
+                idVec.append((*it)._id);
+    }
+    std::sort(idVec.begin(), idVec.end(), [](const int& a, const int& b) {return a < b;});
 
     // get condition table
     QStringList _conditions;
@@ -481,7 +518,7 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
                 _realDataType = true;
             }
         }
-            break;
+        break;
         case QVariant::Vector3D:
         {
             xVVector3DDlgItem* pItem = new xVVector3DDlgItem();
@@ -494,6 +531,24 @@ void xVPropTable::updateTable(QMap<QString, xPROP_TYPE> *pParamMp,xVAbstractBase
             connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
         }
         break;
+        case QVariant::Point:
+            {
+                xVPointDlgItem* pItem = new xVPointDlgItem();
+                pItem->setPoint(prop._value.value<QPoint>());
+                setCellWidget(r,1,pItem);
+                connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
+                connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+            }
+            break;
+        case QVariant::PointF:
+            {
+                xVPointDlgItem* pItem = new xVPointDlgItem();
+                pItem->setPoint(prop._value.value<QPointF>());
+                setCellWidget(r,1,pItem);
+                connect(pItem,SIGNAL(modified()),this,SLOT(customItemChanged()));
+                connect(pItem,SIGNAL(KSignal(const SIG_TYPE& ,void *)),this,SIGNAL(KSignal(const SIG_TYPE& ,void *)));
+            }
+            break;
         case QVariant::UserType:
         {
             if ((int)prop._value.userType()==QMetaType::type("xParamMap"))

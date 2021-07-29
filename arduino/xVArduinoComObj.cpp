@@ -46,6 +46,7 @@ int xVArduinoComThread::receivedMsgCount()
 xVArduinoComObj::xVArduinoComObj(const QString& txt):xVObj_Basics()
 {
     _type=xVOT_ARDUINO_COM;
+    _description="Enables communication with an connected Arduino";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
 
@@ -69,6 +70,8 @@ xVArduinoComObj::xVArduinoComObj(const QString& txt):xVObj_Basics()
     connect(pParamInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     connect(pInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
     connect(pOutputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
+
+    _inputRequirements << (QStringList() << "port");
 }
 xVArduinoComObj::xVArduinoComObj(QDataStream& d):xVObj_Basics(d)
 {
@@ -150,7 +153,8 @@ void xVArduinoComObj::generateShape()
     rg.setColorAt(1,QColor(255,0,0));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

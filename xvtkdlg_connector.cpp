@@ -2,6 +2,29 @@
 #include "ui_xvtkdlg.h"
 #include "xVDashboardView.h"
 
+bool dataCompatibility(xVObj_Basics* pInItem,xVObj_Basics* pOutItem)
+{
+    bool _res = false;
+
+    if (pInItem && pOutItem)
+    {
+        QStringList outputParamLst = pOutItem->outputParamMap()->keys();
+        bool _scenerioSuccess = pInItem->inputRequirements()->count()==0 || (outputParamLst.count()==0 && pInItem->inputRequirements()->count()==0);
+        for (int i=0;i<pInItem->inputRequirements()->count() && !_scenerioSuccess;++i)
+        {
+            _scenerioSuccess = false;
+            for (int j=0;j<pInItem->inputRequirements()->at(i).count();++j)
+            {
+                QString _item = pInItem->inputRequirements()->at(i).at(j);
+                _scenerioSuccess|= outputParamLst.contains(_item);
+            }
+        }
+        _res|=_scenerioSuccess;
+    }
+
+    return _res;
+}
+
 void xVTKDlg::connectorActivated(xVObj_Basics* pEItem,xCONNECTOR_TYPE type)
 {
     // self connection is forbidden
@@ -22,6 +45,20 @@ void xVTKDlg::connectorActivated(xVObj_Basics* pEItem,xCONNECTOR_TYPE type)
 
         emit KSignal(ST_WARN_MSG,new QString("An object cannot be connected to itself"));
 
+        return;
+    }
+
+    // data compability check
+    if (type==xCT_INPUT && _dashboardLst[_currentDashBoard]->_outConnectorSet && !dataCompatibility(pEItem,_dashboardLst[_currentDashBoard]->pOutEItem))
+    {
+        emit KSignal(ST_WARN_MSG,new QString("data types don't match. connection not established"));
+        pEItem->activeConnector()->setActivated(false);
+        return;
+    }
+    if (type==xCT_OUTPUT && _dashboardLst[_currentDashBoard]->_inConnectorSet && !dataCompatibility(_dashboardLst[_currentDashBoard]->pInEItem,pEItem))
+    {
+        emit KSignal(ST_WARN_MSG,new QString("data types don't match. connection not established"));
+        pEItem->activeConnector()->setActivated(false);
         return;
     }
 

@@ -27,6 +27,9 @@ xVGenFilterObj::xVGenFilterObj(const QString& txt):xVObj_Basics()
     pParamInputCon->item()->moveBy(50,-10);
     pGrpItem->addToGroup(pParamInputCon->item());
     connect(pParamInputCon,SIGNAL(activated(xConnector*,xCONNECTOR_TYPE)),this,SLOT(connectorActivated_SLOT(xConnector*,xCONNECTOR_TYPE)));
+
+    _inputRequirements << (QStringList() << "image");
+    _inputRequirements << (QStringList() << "volume");
 }
 
 xVGenFilterObj::xVGenFilterObj(QDataStream &d):xVObj_Basics(d)
@@ -62,7 +65,8 @@ void xVGenFilterObj::generateShape()
     rg.setColorAt(1,QColor(200,200,200));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

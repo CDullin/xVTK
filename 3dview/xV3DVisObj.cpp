@@ -17,6 +17,8 @@
 #include "vtkBoxWidget.h"
 #include "vtkAbstractVolumeMapper.h"
 #include "vtkDataSet.h"
+#include "vtkInteractorStyleTrackballCamera.h"
+#include "xVPlaneObj.h"
 #include <QDockWidget>
 #include <QProcess>
 #include <QTextStream>
@@ -24,14 +26,16 @@
 #include <QCoreApplication>
 
 xV3DVisObj::xV3DVisObj(const QString& txt):xVGenVisObj(txt)
-{
+{       
+    qRegisterMetaType<QVTKInteractor*>("QVTKInteractorPtr");
+    _description="Used to display multiple 3D\ndata sets and tool objects";
     _type = xVOT_3D_VIEW;
     _maxInput = 1000;
 
     _paramMp["background color1"]._id = 1;
     _paramMp["background color1"]._value = QVariant::fromValue(QColor(100,100,100));
     _paramMp["background color2"]._id = 2;
-    _paramMp["background color2"]._value = QVariant::fromValue(QColor(200,100,100));
+    _paramMp["background color2"]._value = QVariant::fromValue(QColor(200,200,200));
     _paramMp["background gradient"]._id = 3;
     _paramMp["background gradient"]._value = true;
     _paramMp["point smoothing"]._id = 4;
@@ -56,7 +60,8 @@ xV3DVisObj::xV3DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["scale bar"]._value = true;
     _paramMp["scale bar label mode"]._id=31;
     _paramMp["scale bar label mode"]._value="distance";
-    _optionLsts["scale bar label mode"] << "distance" << "XY coordinates";
+    if (!_optionLsts["scale bar label mode"].contains("distance")) _optionLsts["scale bar label mode"] << "distance";
+    if (!_optionLsts["scale bar label mode"].contains("XY coordinates")) _optionLsts["scale bar label mode"] << "XY coordinates";
     _paramMp["right axis visible"]._id=32;
     _paramMp["right axis visible"]._value=true;
     _paramMp["left axis visible"]._id=33;
@@ -89,60 +94,97 @@ xV3DVisObj::xV3DVisObj(const QString& txt):xVGenVisObj(txt)
     _paramMp["top axis properties"]._value=QVariant::fromValue(new xVAxisProp());
     _paramMp["bottom axis properties"]._id=53;
     _paramMp["bottom axis properties"]._value=QVariant::fromValue(new xVAxisProp());
+
+    _inputRequirements << (QStringList() << "actor");
+    _inputRequirements << (QStringList() << "volume");
+    _inputRequirements << (QStringList() << "plane widget");
+
+    _outputParamMp["interactor"]._id=1;
+    _outputParamMp["interactor"]._value=QVariant::fromValue((QVTKInteractorPtr)0);
 }
 
 xV3DVisObj::xV3DVisObj(QDataStream &d):xVGenVisObj(d)
 {
+    qRegisterMetaType<QVTKInteractor*>("QVTKInteractorPtr");
     _type = xVOT_3D_VIEW;
     _maxInput = 1000;
+
+    _outputParamMp["interactor"]._id=1;
+    _outputParamMp["interactor"]._value=QVariant::fromValue((QVTKInteractorPtr)0);
 }
 
 void xV3DVisObj::run()
 {
     xVGenVisObj::run();
-    if (status()!=OS_UPDATE_NEEDED) return;
 
     setStatus(OS_RUNNING);
     if (pRenderWdgt==nullptr)
     {
 
-        pRenderWdgt = new QVTKWidget();
+        pRenderWdgt = new xVVtkWidget();
         pRenderWdgt->resize( 512, 512);
         pRenderer = vtkRenderer::New();
         pRenderWdgt->GetRenderWindow()->AddRenderer(pRenderer);
-        pRenderer->SetUseDepthPeeling(true);
-        pRenderer->SetUseDepthPeelingForVolumes(true);
-        pRenderer->SetUseHiddenLineRemoval(true);
+        //pRenderer->SetUseDepthPeeling(true);
+        //pRenderer->SetUseDepthPeelingForVolumes(true);
+        //pRenderer->SetUseHiddenLineRemoval(true);
         pRenderer->SetAutomaticLightCreation(true);
         pRenderWdgt->GetRenderWindow()->SetLineSmoothing(1);
+        vtkInteractorStyleTrackballCamera *pInteractorStyle = vtkInteractorStyleTrackballCamera::New();
+        pInteractorStyle->SetDefaultRenderer(pRenderer);
+        pRenderWdgt->GetInteractor()->SetInteractorStyle(pInteractorStyle);
+
+        pOrientationMaker = vtkOrientationMarkerWidget::New();
+        pOrientationMaker->SetInteractor(pRenderWdgt->GetInteractor());
+        pOrientationMaker->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+        pAxes = vtkAxesActor::New();
+        pOrientationMaker->SetOrientationMarker(pAxes);
+        pOrientationMaker->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+        pOrientationMaker->SetEnabled( 1 );
+        pOrientationMaker->InteractiveOn();
+
+        pScaleBar = vtkLegendScaleActor::New();
+        _paramMp["scale bar title font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendTitleProperty());
+        _paramMp["scale bar label font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendLabelProperty());
+        _paramMp["right axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetRightAxis());
+        _paramMp["left axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetLeftAxis());
+        _paramMp["top axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetTopAxis());
+        _paramMp["bottom axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetBottomAxis());
+        pRenderer->AddActor(pScaleBar);
+
+        _outputParamMp["interactor"]._value=QVariant::fromValue((QVTKInteractorPtr)pRenderWdgt->GetInteractor());
+
+        pRenderWdgt->setProperty("title",QVariant(_paramMp["name"]._value.toString()));
+        emit KSignal(ST_ADD_VISUALIZATION_WDGT,pRenderWdgt);               
     }
 
     vtkVolume *pVtkVol=nullptr;
+    vtkImagePlaneWidget *pPlaneWdgt=nullptr;
 
     for (QList <xConnector*>::iterator it2=_connectorLst.begin();it2!=_connectorLst.end();++it2)
     {
-        // find all connected and enabled inputs
-        if ((*it2)->type()==xCT_INPUT && (*it2)->isEnabled())
+        // find all connected and enabled inputs of the actual input obj
+        if ((*it2)->type()==xCT_INPUT &&
+            (*it2)->isEnabled() &&
+            (*it2)->baseObj()==_dashboardLst[_currentDashBoard]->pPrevStepObj)
         {
             for (QList <xVObj_Basics*>::iterator it=(*it2)->connectedObjects()->begin();it!=(*it2)->connectedObjects()->end();++it)
             {
                 // find all vis property objects
                 xVGenVisPropObj *pIObj = dynamic_cast<xVGenVisPropObj*>(*it);
                 if (pIObj && pIObj->outputParamMap()->contains("actor"))
-                    pRenderer->AddActor((*pIObj->outputParamMap())["actor"]._value.value<vtkActorPtr>());
+                {
+                    vtkActor *pActor = (*pIObj->outputParamMap())["actor"]._value.value<vtkActorPtr>();
+                    if (!pRenderer->GetActors()->IsItemPresent(pActor))
+                        pRenderer->AddActor(pActor);
+                }
                 if (pIObj && pIObj->outputParamMap()->contains("volume"))
                 {
                     pVtkVol=(*pIObj->outputParamMap())["volume"]._value.value<vtkVolumePtr>();
                     pRenderer->AddVolume(pVtkVol);
                 }
-                /*
-                if ((*it)->outputParamMap()->contains("bounding box"))
-                {
-                    vtkActor *pBBoxActor = vtkActor::New();
-                    pBBoxActor->SetMapper((*(*it)->outputParamMap())["bounding box"]._value.value<vtkPolyDataMapperPtr>());
-                    pRenderer->AddActor(pBBoxActor);
-                }
-                */
+                if ((*it)->outputParamMap()->contains("plane widget"))
+                    pPlaneWdgt=(*(*it)->outputParamMap())["plane widget"]._value.value<vtkImagePlaneWidgetPtr>();
             }
         }
     }
@@ -151,23 +193,6 @@ void xV3DVisObj::run()
     pRenderer->ResetCameraClippingRange();
     pRenderer->ResetCamera();
 
-    pOrientationMaker = vtkOrientationMarkerWidget::New();
-    pOrientationMaker->SetInteractor(pRenderWdgt->GetInteractor());
-    pOrientationMaker->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-    pAxes = vtkAxesActor::New();
-    pOrientationMaker->SetOrientationMarker(pAxes);
-    pOrientationMaker->SetViewport( 0.0, 0.0, 0.4, 0.4 );
-    pOrientationMaker->SetEnabled( 1 );
-    pOrientationMaker->InteractiveOn();
-
-    pScaleBar = vtkLegendScaleActor::New();
-    _paramMp["scale bar title font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendTitleProperty());
-    _paramMp["scale bar label font"]._value.value<xVTextPropPtr>()->generateParamFromVtkTextProp(pScaleBar->GetLegendLabelProperty());
-    _paramMp["right axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetRightAxis());
-    _paramMp["left axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetLeftAxis());
-    _paramMp["top axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetTopAxis());
-    _paramMp["bottom axis properties"]._value.value<xVAxisPropPtr>()->generateParamFromVtkAxisProp(pScaleBar->GetBottomAxis());
-    pRenderer->AddActor(pScaleBar);
 
     /* works
     vtkBoxWidget *pBBoxWdgt = vtkBoxWidget::New();
@@ -176,20 +201,15 @@ void xV3DVisObj::run()
     pBBoxWdgt->PlaceWidget();
     pBBoxWdgt->On();
     */
-
-    vtkImagePlaneWidget *pPlaneWdgt = vtkImagePlaneWidget::New();
-    pPlaneWdgt->SetInteractor(pRenderWdgt->GetInteractor());
-    pPlaneWdgt->TextureVisibilityOn();
-    pPlaneWdgt->SetInputData(pVtkVol->GetMapper()->GetDataSetInput());
-    pPlaneWdgt->SetPlaneOrientationToYAxes();
-    pPlaneWdgt->SetSlicePosition(10);
-    pPlaneWdgt->UpdatePlacement();
-    pPlaneWdgt->On();
-
+    if (pPlaneWdgt)
+    {
+        pPlaneWdgt->SetInteractor(pRenderWdgt->GetInteractor());
+        pPlaneWdgt->UpdatePlacement();
+        pPlaneWdgt->On();
+    }
     // adjusts the initial parameter
     paramModified("");
 
-    emit KSignal(ST_ADD_VISUALIZATION_WDGT,pRenderWdgt);
     setStatus(OS_VALID);
 }
 

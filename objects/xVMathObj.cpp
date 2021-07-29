@@ -4,6 +4,7 @@
 xVMathObj::xVMathObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_MATH;
+    _description="Calculates mathematical equations";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     _paramMp["equation"]._value = QVariant::fromValue(xVEvalCondition(""));
@@ -82,7 +83,8 @@ void xVMathObj::generateShape()
     rg.setColorAt(1,QColor(150,150,0));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

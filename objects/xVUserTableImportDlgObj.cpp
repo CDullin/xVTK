@@ -4,6 +4,7 @@
 xVUserTableImportDlgObj::xVUserTableImportDlgObj(const QString& txt):xVGenUserDlgObj(txt)
 {
     _type = xVOT_USER_TABLE_DLG;
+    _description = "Interactive override of object parameters";
     _paramMp["title"]._id=1;
     _paramMp["title"]._value="param input dialog";
     _paramMp["parameter table"]._id=2;
@@ -17,6 +18,14 @@ xVUserTableImportDlgObj::xVUserTableImportDlgObj(QDataStream& d):xVGenUserDlgObj
 void xVUserTableImportDlgObj::save(QDataStream& d,bool _explicit)
 {
     xVGenUserDlgObj::save(d);
+}
+
+QString removeTrailingBraket(QString txt)
+{
+    QString res=txt;
+    if (txt.indexOf("[")==0) res=txt.right(txt.length()-txt.indexOf("]")-1);
+    res=res.simplified();
+    return res;
 }
 
 void xVUserTableImportDlgObj::run()
@@ -38,19 +47,19 @@ void xVUserTableImportDlgObj::run()
             for (QList <xVObj_Basics*>::iterator it2=(*it)->connectedObjects()->begin();it2!=(*it)->connectedObjects()->end();++it2)
                 for (xParamMap::iterator it3=map.begin();it3!=map.end();++it3)
                 {
-                    QString key=it3.key();
-                    if ((*it2)->paramMap()->contains(it3.key()))
+                    QString key=removeTrailingBraket(it3.key());
+                    if ((*it2)->paramMap()->contains(key))
                             //&& (*it3).pRefObj==(*it2))
-                            (*(*it2)->paramMap())[it3.key()]=it3.value();
+                            (*(*it2)->paramMap())[key]=it3.value();
                 }
     // override global namespace
     bool _globalNamespace_modified = false;
     for (xParamMap::iterator it3=map.begin();it3!=map.end();++it3)
     {
-        QString key=it3.key();
-        if (::_globalNameSpace.contains(it3.key()) && (*it3).pRefObj==nullptr)
+        QString key=removeTrailingBraket(it3.key());
+        if (::_globalNameSpace.contains(key) && (*it3).pRefObj==nullptr)
         {
-            ::_globalNameSpace[it3.key()]=it3.value();
+            ::_globalNameSpace[key]=it3.value();
             _globalNamespace_modified = true;
         }
     }

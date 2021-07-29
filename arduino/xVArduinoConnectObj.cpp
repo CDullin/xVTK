@@ -4,6 +4,7 @@
 xVArduinoConnectObj::xVArduinoConnectObj(const QString& txt):xVObj_Basics()
 {
     _type=xVOT_ARDUINO_CONNECT;
+    _description="Connects to an Arduino";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
     _paramMp["serial port"]._id = 1;
@@ -161,7 +162,8 @@ void xVArduinoConnectObj::generateShape()
     rg.setColorAt(1,QColor(255,0,0));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

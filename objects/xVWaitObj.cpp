@@ -5,6 +5,7 @@
 xVWaitObj::xVWaitObj(const QString& txt):xVObj_Basics()
 {
     _type = xVOT_WAIT;
+    _description="Used to specifically delay the progress in the current fiber";
     _paramMp["name"]._value = txt;
     _paramMp["name"]._id = 0;
 
@@ -139,7 +140,8 @@ void xVWaitObj::generateShape()
     rg.setColorAt(1,QColor(150,150,0));
 
     QBrush brush(rg);
-    pShapeItem = new QGraphicsPathItem(path);
+    pShapeItem = new xGraphicsPathItem(path);
+    connect(pShapeItem,SIGNAL(hoverEnter()),this,SLOT(updateDescToolTip()));
     pShapeItem->setPen(pen);
     pShapeItem->setBrush(brush);
 

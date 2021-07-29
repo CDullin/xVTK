@@ -21,36 +21,27 @@ Q_OBJECT
 public:
     xConnector(xVObj_Basics*,QDataStream &d);
     xConnector(xVObj_Basics* o);
-    xVObj_Basics* baseObj(){return pBaseObj;}
+    xVObj_Basics* baseObj();
     void setToInput();
     void setToOutput();
     void setToParamInput();
     void setEnabled(bool b);
-    bool isEnabled(){return _enabled;}
+    bool isEnabled();
     void addConObject(xVObj_Basics* pVObj);
     void removeConObj(xVObj_Basics* pVObj);
     bool connectedTo(xVObj_Basics* pVObj);
-    QList <xVObj_Basics*>* connectedObjects(){return &_connectToLst;}
-    xCONNECTOR_TYPE type(){return _type;}
-    QGraphicsItemGroup *item(){return pGrpItem;}
-    void setActivated(bool b){pEllipseItem->setActivated(b);}
-    bool isActivated(){return pEllipseItem->isActivated();}
-    QPointF pos(){
-        QPointF p(15,0);
-        switch (_type)
-        {
-        case xCT_INPUT: p=QPointF(-15,0);break;
-        case xCT_OUTPUT: p=QPointF(15,0);break;
-        case xCT_PARAMETER: p=QPointF(0,0);break;
-        default:
-            break;
-        }
-        return pEllipseItem->mapToScene(p);}
+    QList <xVObj_Basics*>* connectedObjects();
+    xCONNECTOR_TYPE type();
+    QGraphicsItemGroup *item();
+    void setActivated(bool b);
+    bool isActivated();
+    QPointF pos();
     void save(QDataStream& d);
-    QString id(){return _id;}
-    QStringList* objIDs(){return &_idLst;}
+    QString id();
+    QStringList* objIDs();
 protected slots:
     void connectorActivated();
+    void updateToolTip();
 signals:
     void activated(xConnector*,xCONNECTOR_TYPE);
     void KSignal(const SIG_TYPE&,void* data=nullptr);

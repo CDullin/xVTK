@@ -11,10 +11,12 @@ xVFileImportDlgItem::xVFileImportDlgItem(QWidget *parent):QWidget(parent)
     pLEdit->setGeometry(0,0,80,20);
     pLEdit->setAlignment(Qt::AlignRight);
     pLEdit->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
+    pLEdit->setAutoFillBackground(false);
     pBrowseTB = new QToolButton(this);
     pBrowseTB->setGeometry(80,0,20,20);
     pBrowseTB->setText("...");
     pBrowseTB->setSizePolicy(QSizePolicy::Minimum,QSizePolicy::Expanding);
+    pBrowseTB->setAutoFillBackground(false);
     pLEdit->setReadOnly(true);
     connect(pBrowseTB,SIGNAL(clicked()),this,SLOT(browse()));
     QHBoxLayout *pVBox=new QHBoxLayout(this);

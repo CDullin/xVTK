@@ -4,6 +4,7 @@
 #include "xVTypes.h"
 #include "xVObjects.h"
 #include "xVGenVisObj.h"
+#include "xVVtkWidget.h"
 
 #include <QVTKWidget.h>
 #include <vtkSmartPointer.h>
@@ -29,7 +30,7 @@ public slots:
     virtual void paramModified(const QString& txt="") override;
 
 protected:
-    QVTKWidget* pRenderWdgt=nullptr;
+    xVVtkWidget* pRenderWdgt=nullptr;
     vtkRenderer* pRenderer=nullptr;
     vtkRenderWindow *pRenderWin=nullptr;
     vtkRenderWindowInteractor *pRenderWindowInteractor=nullptr;
@@ -38,6 +39,9 @@ protected:
     vtkRenderWindowInteractor* pAxesInteractor = nullptr;
     vtkLegendScaleActor *pScaleBar = nullptr;
 };
+
+typedef QVTKInteractor* QVTKInteractorPtr;
+Q_DECLARE_METATYPE(QVTKInteractorPtr);
 
 #endif // XV3DVISOBJ_H
 

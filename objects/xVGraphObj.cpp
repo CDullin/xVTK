@@ -3,6 +3,7 @@
 xVGraphObj::xVGraphObj(const QString& txt):xVGenVisObj(txt)
 {
     _type = xVOT_GRAPH;
+    _description = "Used to display data as graphs";
 }
 xVGraphObj::xVGraphObj(QDataStream& d):xVGenVisObj(d)
 {

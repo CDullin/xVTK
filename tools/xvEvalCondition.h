@@ -39,7 +39,7 @@ public:
 
     xVEvalCondition(const QString& str="",QObject *parent = nullptr);
     xVEvalCondition(QDataStream &d);
-    xVEvalCondition(const xVEvalCondition& other) {_condition=other._condition;_mode=other._mode;_result=other._result;}
+    xVEvalCondition(const xVEvalCondition& other):QObject() {_condition=other._condition;_mode=other._mode;_result=other._result;}
 
     void save(QDataStream& d) const;
     bool toBool(){update();return _result.toBool();};
